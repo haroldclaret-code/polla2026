@@ -105,18 +105,18 @@ def cargar_o_inicializar_datos():
     
     df_partidos = pd.DataFrame(partidos_reales)
     
-    # Agregar las llaves de eliminación directa simplificadas
+    # --- LLAVES ELIMINATORIAS (CORREGIDAS VINCULANDO EL DETALLE) ---
     llaves = []
     for i in range(73, 89):
-        llaves.append({"ID": f"P{i}", "Fase": "Eliminatorias directas", "Detalle": "Dieciseisavos", "Partido": f"Llave {i-72}", "Goles_Real_1": "", "Goles_Real_2": ""})
+        llaves.append({"ID": f"P{i}", "Fase": "Eliminatorias Directas", "Detalle": "Dieciseisavos de Final", "Partido": f"Llave {i-72}", "Goles_Real_1": "", "Goles_Real_2": ""})
     for i in range(89, 97):
-        llaves.append({"ID": f"P{i}", "Fase": "Eliminatorias directas", "Detalle": "Octavos de Final", "Partido": f"Octavos {i-88}", "Goles_Real_1": "", "Goles_Real_2": ""})
+        llaves.append({"ID": f"P{i}", "Fase": "Eliminatorias Directas", "Detalle": "Octavos de Final", "Partido": f"Octavos {i-88}", "Goles_Real_1": "", "Goles_Real_2": ""})
     for i in range(97, 101):
-        llaves.append({"ID": f"P{i}", "Fase": "Eliminatorias directas", "Detalle": "Cuartos de Final", "Partido": f"Cuartos {i-96}", "Goles_Real_1": "", "Goles_Real_2": ""})
-    llaves.append({"ID": "P101", "Fase": "Eliminatorias directas", "Detalle": "Semifinal", "Partido": "Semifinal 1", "Goles_Real_1": "", "Goles_Real_2": ""})
-    llaves.append({"ID": "P102", "Fase": "Eliminatorias directas", "Detalle": "Semifinal", "Partido": "Semifinal 2", "Goles_Real_1": "", "Goles_Real_2": ""},)
-    llaves.append({"ID": "P103", "Fase": "Eliminatorias directas", "Detalle": "Tercer Puesto", "Partido": "Tercer Puesto", "Goles_Real_1": "", "Goles_Real_2": ""})
-    llaves.append({"ID": "P104", "Fase": "Eliminatorias directas", "Detalle": "Gran Final", "Partido": "Gran Final 🏆", "Goles_Real_1": "", "Goles_Real_2": ""})
+        llaves.append({"ID": f"P{i}", "Fase": "Eliminatorias Directas", "Detalle": "Cuartos de Final", "Partido": f"Cuartos {i-96}", "Goles_Real_1": "", "Goles_Real_2": ""})
+    llaves.append({"ID": "P101", "Fase": "Eliminatorias Directas", "Detalle": "Semifinal", "Partido": "Semifinal 1", "Goles_Real_1": "", "Goles_Real_2": ""})
+    llaves.append({"ID": "P102", "Fase": "Eliminatorias Directas", "Detalle": "Semifinal", "Partido": "Semifinal 2", "Goles_Real_1": "", "Goles_Real_2": ""})
+    llaves.append({"ID": "P103", "Fase": "Eliminatorias Directas", "Detalle": "Tercer Puesto", "Partido": "Partido 3º Puesto", "Goles_Real_1": "", "Goles_Real_2": ""})
+    llaves.append({"ID": "P104", "Fase": "Eliminatorias Directas", "Detalle": "Gran Final", "Partido": "Gran Final 🏆", "Goles_Real_1": "", "Goles_Real_2": ""})
     
     df_llaves = pd.DataFrame(llaves)
     df_partidos = pd.concat([df_partidos, df_llaves], ignore_index=True)
@@ -155,7 +155,6 @@ pestana = st.radio("Selecciona la Vista Real:", ["📋 Control de Partidos", "�
 if pestana == "📋 Control de Partidos":
     st.subheader("Registro de Marcadores Reales y Pronósticos")
     
-    # Filtros avanzados e intuitivos en paralelo
     col_f1, col_f2 = st.columns(2)
     with col_f1:
         fase_sel = st.selectbox("1. Filtrar Gran Etapa:", st.session_state.db["Fase"].unique())
@@ -167,10 +166,12 @@ if pestana == "📋 Control de Partidos":
         
     df_filtrado = df_fase[df_fase["Detalle"] == detalle_sel]
     
+    # 📐 Altura adaptable para que se desplieguen completas sin recortes molesto
+    altura_dinamica = int((len(df_filtrado) + 1) * 35) + 45
+
     if password == "mundial2026":
         st.success("🔓 Modo Administrador Activado.")
-        # Se agrega la visualización completa extendida con scroll
-        df_editado = st.data_editor(df_filtrado, hide_index=True, use_container_width=True)
+        df_editado = st.data_editor(df_filtrado, hide_index=True, use_container_width=True, height=altura_dinamica)
         if st.button("💾 Guardar y Actualizar Polla Permanentemente"):
             st.session_state.db.update(df_editado)
             st.session_state.db.to_csv(ARCHIVO_DATOS, index=False)
@@ -178,7 +179,7 @@ if pestana == "📋 Control de Partidos":
             st.rerun()
     else:
         st.info("🔒 Vista de Solo Lectura para Apostadores.")
-        st.dataframe(df_filtrado, hide_index=True, use_container_width=True)
+        st.dataframe(df_filtrado, hide_index=True, use_container_width=True, height=altura_dinamica)
 
 elif pestana == "📊 Tabla de Posiciones Global":
     st.subheader("Puntajes Acumulados")
@@ -202,13 +203,12 @@ elif pestana == "🏆 Evolución y Premiación":
             total_puntos += calcular_puntos(fila["Goles_Real_1"], fila["Goles_Real_2"], fila[f"{nom}_G1"], fila[f"{nom}_G2"])
         puntajes[nom] = total_puntos
     df_premios = pd.DataFrame(list(puntajes.items()), columns=["Apostador", "Puntos"])
-    df_premios["Puesto"] = df_premios["Puntos"].rank(method="dense", ascending=False).astype(int)
-    df_premios = df_premios.sort_values(by="Puesto")
+    df_premios = df_premios.sort_values(by="Puntos", ascending=False)
     
     def asignar_medalla(puesto):
         if puesto == 1: return "🥇 1º Puesto"
         if puesto == 2: return "🥈 2º Puesto"
         if puesto == 3: return "🥉 3º Puesto"
         return f"{puesto}º Lugar"
-    df_premios["Puesto"] = df_premios["Puesto"].apply(asignar_medalla)
+    df_premios["Puesto"] = [asignar_medalla(i+1) for i in range(len(df_premios))]
     st.table(df_premios)
