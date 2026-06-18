@@ -16,8 +16,8 @@ ARCHIVO_DATOS = "datos_polla_2026.csv"
 # 📝 MODIFICA AQUÍ LOS NOMBRES DE TUS COMPAÑEROS (DEBEN SER EXACTAMENTE 11)
 # =========================================================================
 NOMBRES_APOSTADORES = [
-    "Juan", "Carlos", "Andrés", "Laura", "Santiago", 
-    "María", "Diego", "Felipe", "Camilo", "Mateo", "David"
+    "Lizeth", "Kevin", "Yudi", "Diana", "Yaritza", 
+    "Álvaro", "Francisco", "Harold", "Alejandra", "Karina", "Milena"
 ]
 # =========================================================================
 
