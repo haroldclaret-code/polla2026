@@ -12,156 +12,108 @@ password = st.sidebar.text_input("Contraseña de Administrador", type="password"
 
 ARCHIVO_DATOS = "datos_polla_2026.csv"
 
-# 📝 LISTA OFICIAL DE TUS COMPAÑEROS
+# 📝 LISTA OFICIAL DE TU GRUPO
 NOMBRES_APOSTADORES = [
     "Lizeth", "Kevin", "Yudi", "Diana", "Yaritza", 
     "Álvaro", "Francisco", "Harold", "Alejandra", "Karina", "Milena"
 ]
 
-# 1. FUNCIÓN CON EL CALENDARIO REAL ESTIPULADO POR LA FIFA
+# 1. FUNCIÓN CON EL FIXTURE REAL COMPLETO Y ABREVIADO
 def cargar_o_inicializar_datos():
     if os.path.exists(ARCHIVO_DATOS):
         return pd.read_csv(ARCHIVO_DATOS)
     
-    # Lista con el orden cronológico oficial de los partidos estipulados
     partidos_reales = [
-        # Grupo A (Inaugurales y fixture)
-        {"ID": "P1", "Fase": "Fase de Grupos", "Partido": "México vs A2 (Inaugural - Estadio Azteca)", "Goles_Real_1": "", "Goles_Real_2": ""},
+        # --- JORNADA 1 ---
+        {"ID": "P1", "Fase": "Fase de Grupos", "Partido": "Méx vs A2", "Goles_Real_1": "", "Goles_Real_2": ""},
         {"ID": "P2", "Fase": "Fase de Grupos", "Partido": "A3 vs A4", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P25", "Fase": "Fase de Grupos", "Partido": "México vs A3 (Guadalajara)", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P26", "Fase": "Fase de Grupos", "Partido": "A4 vs A2", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P53", "Fase": "Fase de Grupos", "Partido": "A4 vs México (Estadio Azteca)", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P54", "Fase": "Fase de Grupos", "Partido": "A2 vs A3", "Goles_Real_1": "", "Goles_Real_2": ""},
-        
-        # Grupo B (Canadá y fixture)
-        {"ID": "P3", "Fase": "Fase de Grupos", "Partido": "Canadá vs B2 (Inaugural Canadá - Toronto)", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P3", "Fase": "Fase de Grupos", "Partido": "Can vs B2", "Goles_Real_1": "", "Goles_Real_2": ""},
         {"ID": "P4", "Fase": "Fase de Grupos", "Partido": "B3 vs B4", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P27", "Fase": "Fase de Grupos", "Partido": "B4 vs B2", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P28", "Fase": "Fase de Grupos", "Partido": "Canadá vs B3 (Vancouver)", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P55", "Fase": "Fase de Grupos", "Partido": "B2 vs B3", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P56", "Fase": "Fase de Grupos", "Partido": "B4 vs Canadá (Vancouver)", "Goles_Real_1": "", "Goles_Real_2": ""},
-        
-        # Grupo D (Estados Unidos y fixture)
-        {"ID": "P5", "Fase": "Fase de Grupos", "Partido": "Estados Unidos vs D2 (Inaugural USA - Los Ángeles)", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P5", "Fase": "Fase de Grupos", "Partido": "USA vs D2", "Goles_Real_1": "", "Goles_Real_2": ""},
         {"ID": "P6", "Fase": "Fase de Grupos", "Partido": "D3 vs D4", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P29", "Fase": "Fase de Grupos", "Partido": "Estados Unidos vs D3 (Seattle)", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P7", "Fase": "Fase de Grupos", "Partido": "C1 vs C2", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P8", "Fase": "Fase de Grupos", "Partido": "C3 vs C4", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P9", "Fase": "Fase de Grupos", "Partido": "E1 vs E2", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P10", "Fase": "Fase de Grupos", "Partido": "E3 vs E4", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P11", "Fase": "Fase de Grupos", "Partido": "F1 vs F2", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P12", "Fase": "Fase de Grupos", "Partido": "F3 vs F4", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P13", "Fase": "Fase de Grupos", "Partido": "G1 vs G2", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P14", "Fase": "Fase de Grupos", "Partido": "G3 vs G4", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P15", "Fase": "Fase de Grupos", "Partido": "H1 vs H2", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P16", "Fase": "Fase de Grupos", "Partido": "H3 vs H4", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P17", "Fase": "Fase de Grupos", "Partido": "I1 vs I2", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P18", "Fase": "Fase de Grupos", "Partido": "I3 vs I4", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P19", "Fase": "Fase de Grupos", "Partido": "J1 vs J2", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P20", "Fase": "Fase de Grupos", "Partido": "J3 vs J4", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P21", "Fase": "Fase de Grupos", "Partido": "K1 vs K2", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P22", "Fase": "Fase de Grupos", "Partido": "K3 vs K4", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P23", "Fase": "Fase de Grupos", "Partido": "L1 vs L2", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P24", "Fase": "Fase de Grupos", "Partido": "L3 vs L4", "Goles_Real_1": "", "Goles_Real_2": ""},
+
+        # --- JORNADA 2 ---
+        {"ID": "P25", "Fase": "Fase de Grupos", "Partido": "Méx vs A3", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P26", "Fase": "Fase de Grupos", "Partido": "A4 vs A2", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P27", "Fase": "Fase de Grupos", "Partido": "B4 vs B2", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P28", "Fase": "Fase de Grupos", "Partido": "Can vs B3", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P29", "Fase": "Fase de Grupos", "Partido": "USA vs D3", "Goles_Real_1": "", "Goles_Real_2": ""},
         {"ID": "P30", "Fase": "Fase de Grupos", "Partido": "D4 vs D2", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P57", "Fase": "Fase de Grupos", "Partido": "D4 vs Estados Unidos (Los Ángeles)", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P58", "Fase": "Fase de Grupos", "Partido": "D2 vs D3", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P31", "Fase": "Fase de Grupos", "Partido": "C4 vs C2", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P32", "Fase": "Fase de Grupos", "Partido": "C1 vs C3", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P33", "Fase": "Fase de Grupos", "Partido": "E4 vs E2", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P34", "Fase": "Fase de Grupos", "Partido": "E1 vs E3", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P35", "Fase": "Fase de Grupos", "Partido": "F4 vs F2", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P36", "Fase": "Fase de Grupos", "Partido": "F1 vs F3", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P37", "Fase": "Fase de Grupos", "Partido": "G4 vs G2", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P38", "Fase": "Fase de Grupos", "Partido": "G1 vs G3", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P39", "Fase": "Fase de Grupos", "Partido": "H4 vs H2", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P40", "Fase": "Fase de Grupos", "Partido": "H1 vs H3", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P41", "Fase": "Fase de Grupos", "Partido": "I4 vs I2", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P42", "Fase": "Fase de Grupos", "Partido": "I1 vs I3", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P43", "Fase": "Fase de Grupos", "Partido": "J4 vs J2", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P44", "Fase": "Fase de Grupos", "Partido": "J1 vs J3", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P45", "Fase": "Fase de Grupos", "Partido": "K4 vs K2", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P46", "Fase": "Fase de Grupos", "Partido": "K1 vs K3", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P47", "Fase": "Fase de Grupos", "Partido": "L4 vs L2", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P48", "Fase": "Fase de Grupos", "Partido": "L1 vs L3", "Goles_Real_1": "", "Goles_Real_2": ""},
+
+        # --- JORNADA 3 ---
+        {"ID": "P49", "Fase": "Fase de Grupos", "Partido": "A2 vs A3", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P50", "Fase": "Fase de Grupos", "Partido": "A4 vs Méx", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P51", "Fase": "Fase de Grupos", "Partido": "B2 vs B3", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P52", "Fase": "Fase de Grupos", "Partido": "B4 vs Can", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P53", "Fase": "Fase de Grupos", "Partido": "C2 vs C3", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P54", "Fase": "Fase de Grupos", "Partido": "C4 vs C1", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P55", "Fase": "Fase de Grupos", "Partido": "D2 vs D3", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P56", "Fase": "Fase de Grupos", "Partido": "D4 vs USA", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P57", "Fase": "Fase de Grupos", "Partido": "E2 vs E3", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P58", "Fase": "Fase de Grupos", "Partido": "E4 vs E1", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P59", "Fase": "Fase de Grupos", "Partido": "F2 vs F3", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P60", "Fase": "Fase de Grupos", "Partido": "F4 vs F1", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P61", "Fase": "Fase de Grupos", "Partido": "G2 vs G3", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P62", "Fase": "Fase de Grupos", "Partido": "G4 vs G1", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P63", "Fase": "Fase de Grupos", "Partido": "H2 vs H3", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P64", "Fase": "Fase de Grupos", "Partido": "H4 vs H1", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P65", "Fase": "Fase de Grupos", "Partido": "I2 vs I3", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P66", "Fase": "Fase de Grupos", "Partido": "I4 vs I1", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P67", "Fase": "Fase de Grupos", "Partido": "J2 vs J3", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P68", "Fase": "Fase de Grupos", "Partido": "J4 vs J1", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P69", "Fase": "Fase de Grupos", "Partido": "K2 vs K3", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P70", "Fase": "Fase de Grupos", "Partido": "K4 vs K1", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P71", "Fase": "Fase de Grupos", "Partido": "L2 vs L3", "Goles_Real_1": "", "Goles_Real_2": ""},
+        {"ID": "P72", "Fase": "Fase de Grupos", "Partido": "L4 vs L1", "Goles_Real_1": "", "Goles_Real_2": ""},
     ]
     
-    # Rellenar automáticamente el resto de grupos (C, E, F, G, H, I, J, K, L) hasta completar los 72 de fase de grupos
-    letras_grupos = ["C", "E", "F", "G", "H", "I", "J", "K", "L"]
-    id_partido = 7
-    for g in letras_grupos:
-        partidos_reales.append({"ID": f"P{id_partido}", "Fase": "Fase de Grupos", "Partido": f"Grupo {g}: {g}1 vs {g}2", "Goles_Real_1": "", "Goles_Real_2": ""})
-        partidos_reales.append({"ID": f"P{id_partido+1}", "Fase": "Fase de Grupos", "Partido": f"Grupo {g}: {g}3 vs {g}4", "Goles_Real_1": "", "Goles_Real_2": ""})
-        partidos_reales.append({"ID": f"P{id_partido+24}", "Fase": "Fase de Grupos", "Partido": f"Grupo {g}: {g}4 vs {g}2", "Goles_Real_1": "", "Goles_Real_2": ""})
-        partidos_reales.append({"ID": f"P{id_partido+25}", "Fase": "Fase de Grupos", "Partido": f"Grupo {g}: {g}1 vs {g}3", "Goles_Real_1": "", "Goles_Real_2": ""})
-        partidos_reales.append({"ID": f"P{id_partido+48}", "Fase": "Fase de Grupos", "Partido": f"Grupo {g}: {g}2 vs {g}3", "Goles_Real_1": "", "Goles_Real_2": ""})
-        partidos_reales.append({"ID": f"P{id_partido+49}", "Fase": "Fase de Grupos", "Partido": f"Grupo {g}: {g}4 vs {g}1", "Goles_Real_1": "", "Goles_Real_2": ""})
-        id_partido += 2
-        if id_partido == 25: id_partido = 31 # Ajuste para saltar los bloques ya mapeados de USA/Mex/Can
-        if id_partido == 53: id_partido = 59
-        
-    # Ordenar por ID numérico para mantener la consistencia del fixture
     df_partidos = pd.DataFrame(partidos_reales)
-    df_partidos["Num"] = df_partidos["ID"].str.extract(r'(\d+)').astype(int)
-    df_partidos = df_partidos.sort_values(by="Num").drop(columns=["Num"])
     
-    # Agregar las llaves de eliminación directa estipuladas por FIFA
+    # Agregar las llaves de eliminación directa simplificadas
     llaves = []
     for i in range(73, 89):
-        llaves.append({"ID": f"P{i}", "Fase": "Dieciseisavos", "Partido": f"Llave Eliminatoria {i-72} (32avos de Final)", "Goles_Real_1": "", "Goles_Real_2": ""})
+        llaves.append({"ID": f"P{i}", "Fase": "Dieciseisavos", "Partido": f"Llave {i-72}", "Goles_Real_1": "", "Goles_Real_2": ""})
     for i in range(89, 97):
-        llaves.append({"ID": f"P{i}", "Fase": "Octavos de Final", "Partido": f"Octavos de Final {i-88}", "Goles_Real_1": "", "Goles_Real_2": ""})
+        llaves.append({"ID": f"P{i}", "Fase": "Octavos de Final", "Partido": f"Octavos {i-88}", "Goles_Real_1": "", "Goles_Real_2": ""})
     for i in range(97, 101):
-        llaves.append({"ID": f"P{i}", "Fase": "Cuartos de Final", "Partido": f"Cuartos de Final {i-96}", "Goles_Real_1": "", "Goles_Real_2": ""})
-    llaves.append({"ID": "P101", "Fase": "Semifinal", "Partido": "Semifinal 1 (Dallas/Atlanta)", "Goles_Real_1": "", "Goles_Real_2": ""})
-    llaves.append({"ID": "P102", "Fase": "Semifinal", "Partido": "Semifinal 2 (Dallas/Atlanta)", "Goles_Real_1": "", "Goles_Real_2": ""})
-    llaves.append({"ID": "P103", "Fase": "Tercer Puesto", "Partido": "Partido por el Tercer Puesto (Miami)", "Goles_Real_1": "", "Goles_Real_2": ""})
-    llaves.append({"ID": "P104", "Fase": "Gran Final", "Partido": "Gran Final del Mundial 2026 (Nueva York / New Jersey)", "Goles_Real_1": "", "Goles_Real_2": ""})
-    
-    df_llaves = pd.DataFrame(llaves)
-    df_partidos = pd.concat([df_partidos, df_llaves], ignore_index=True)
-    
-    # Crear las columnas de apuestas para tus 11 amigos
-    for nom in NOMBRES_APOSTADORES:
-        df_partidos[f"{nom}_G1"] = ""
-        df_partidos[f"{nom}_G2"] = ""
-        
-    df_partidos.to_csv(ARCHIVO_DATOS, index=False)
-    return df_partidos
-
-if "db" not in st.session_state:
-    st.session_state.db = cargar_o_inicializar_datos()
-
-# 2. SISTEMA MATEMÁTICO DE REGLAS
-def calcular_puntos(r1, r2, p1, p2):
-    if r1 == "" or r2 == "" or p1 == "" or p2 == "" or pd.isna(r1) or pd.isna(r2) or pd.isna(p1) or pd.isna(p2):
-        return 0
-    try:
-        r1, r2, p1, p2 = int(r1), int(r2), int(p1), int(p2)
-    except:
-        return 0
-    if r1 == p1 and r2 == p2:
-        return 10
-    ganador_real = 1 if r1 > r2 else (-1 if r1 < r2 else 0)
-    ganador_pago = 1 if p1 > p2 else (-1 if p1 < p2 else 0)
-    if ganador_real == ganador_pago:
-        return 5
-    if (r1 - r2) == (p1 - p2):
-        return 2
-    return 0
-
-pestana = st.radio("Selecciona la Vista:", ["📋 Control de Partidos", "📊 Tabla de Posiciones Global", "🏆 Evolución y Premiación"], horizontal=True)
-
-if pestana == "📋 Control de Partidos":
-    st.subheader("Registro de Marcadores Reales y Pronósticos")
-    fase_sel = st.selectbox("Filtrar por Fase del Torneo", st.session_state.db["Fase"].unique())
-    df_filtrado = st.session_state.db[st.session_state.db["Fase"] == fase_sel]
-    
-    if password == "mundial2026":
-        st.success("🔓 Modo Administrador Activado.")
-        df_editado = st.data_editor(df_filtrado, hide_index=True)
-        if st.button("💾 Guardar y Actualizar Polla Permanentemente"):
-            st.session_state.db.update(df_editado)
-            st.session_state.db.to_csv(ARCHIVO_DATOS, index=False)
-            st.success("¡Datos guardados con éxito!")
-            st.rerun()
-    else:
-        st.info("🔒 Vista de Solo Lectura para Apostadores.")
-        st.dataframe(df_filtrado, hide_index=True)
-
-elif pestana == "📊 Tabla de Posiciones Global":
-    st.subheader("Puntajes Acumulados")
-    puntajes = {}
-    for nom in NOMBRES_APOSTADORES:
-        total_puntos = 0
-        for idx, fila in st.session_state.db.iterrows():
-            total_puntos += calcular_puntos(fila["Goles_Real_1"], fila["Goles_Real_2"], fila[f"{nom}_G1"], fila[f"{nom}_G2"])
-        puntajes[nom] = total_puntos
-        
-    df_posiciones = pd.DataFrame(list(puntajes.items()), columns=["Apostador", "Puntos Totales"])
-    df_posiciones = df_posiciones.sort_values(by="Puntos Totales", ascending=False)
-    st.dataframe(df_posiciones, hide_index=True, use_container_width=True)
-
-elif pestana == "🏆 Evolución y Premiación":
-    st.subheader("Asignación de Puestos para Premios")
-    puntajes = {}
-    for nom in NOMBRES_APOSTADORES:
-        total_puntos = 0
-        for idx, fila in st.session_state.db.iterrows():
-            total_puntos += calcular_puntos(fila["Goles_Real_1"], fila["Goles_Real_2"], fila[f"{nom}_G1"], fila[f"{nom}_G2"])
-        puntajes[nom] = total_puntos
-    df_premios = pd.DataFrame(list(puntajes.items()), columns=["Apostador", "Puntos"])
-    df_premios["Puesto"] = df_premios["Puntos"].rank(method="dense", ascending=False).astype(int)
-    df_premios = df_premios.sort_values(by="Puesto")
-    
-    def asignar_medalla(puesto):
-        if puesto == 1: return "🥇 1º Puesto"
-        if puesto == 2: return "🥈 2º Puesto"
-        if puesto == 3: return "🥉 3º Puesto"
-        return f"{puesto}º Lugar"
-    df_premios["Puesto"] = df_premios["Puesto"].apply(asignar_medalla)
-    st.table(df_premios)
+        llaves.append({"ID": f"P{i}", "Fase": "Cuartos de Final", "Partido": f"Cuartos {i-96}", "Goles_Real_1": "", "Goles_Real_2": ""})
+    llaves.append({"ID": "P101", "Fase": "Semifinal", "Partido": "Semifinal 1", "Goles_Real_1": "", "Goles_Real_2": ""})
+    llaves.append({"ID": "P102", "Fase": "Semifinal", "Partido": "Semifinal 2", "Goles_Real_1": "", "Goles_Real_2": ""},)
+    llaves.append({"ID": "P103", "Fase": "Tercer Puesto", "Partido": "Tercer Puesto", "Goles_Real_1": "", "Goles_Real_2": ""})
+    llaves.append({"ID": "P104", "Fase": "Gran Final", "Partido": "Gran Final 🏆", "Goles_Real_1": "", "Goles_Real_2": ""})
