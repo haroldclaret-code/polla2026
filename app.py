@@ -12,13 +12,25 @@ password = st.sidebar.text_input("Contraseña de Administrador", type="password"
 
 ARCHIVO_DATOS = "datos_polla_2026.csv"
 
+# =========================================================================
+# 📝 MODIFICA AQUÍ LOS NOMBRES DE TUS COMPAÑEROS (DEBEN SER EXACTAMENTE 11)
+# =========================================================================
+NOMBRES_APOSTADORES = [
+    "Juan", "Carlos", "Andrés", "Laura", "Santiago", 
+    "María", "Diego", "Felipe", "Camilo", "Mateo", "David"
+]
+# =========================================================================
+
 # 1. FUNCIÓN PARA CREAR O CARGAR LA BASE DE DATOS REAL
 def cargar_o_inicializar_datos():
-    # Si el archivo ya existe en la nube, lo lee para no perder datos
     if os.path.exists(ARCHIVO_DATOS):
-        return pd.read_csv(ARCHIVO_DATOS)
+        df_existente = pd.read_csv(ARCHIVO_DATOS)
+        # Verificación por si cambiaste nombres de columnas
+        for idx, nom in enumerate(NOMBRES_APOSTADORES, 1):
+            if f"Ap{idx}_G1" in df_existente.columns:
+                df_existente = df_existente.rename(columns={f"Ap{idx}_G1": f"{nom}_G1", f"Ap{idx}_G2": f"{nom}_G2"})
+        return df_existente
     
-    # Si no existe (es la primera vez), genera la estructura de los 104 partidos automáticamente
     partidos = []
     for i in range(1, 73):
         partidos.append({"ID": f"P{i}", "Fase": "Fase de Grupos", "Partido": f"Partido de Grupo {i}", "Goles_Real_1": "", "Goles_Real_2": ""})
@@ -35,21 +47,25 @@ def cargar_o_inicializar_datos():
     
     df_partidos = pd.DataFrame(partidos)
     
-    # Crea las columnas en blanco para los 11 apostadores
-    for i in range(1, 12):
-        df_partidos[f"Ap{i}_G1"] = ""
-        df_partidos[f"Ap{i}_G2"] = ""
+    # Crea las columnas usando los nombres personalizados
+    for nom in NOMBRES_APOSTADORES:
+        df_partidos[f"{nom}_G1"] = ""
+        df_partidos[f"{nom}_G2"] = ""
         
     df_partidos.to_csv(ARCHIVO_DATOS, index=False)
     return df_partidos
 
-# Cargar la base de datos actual
 if "db" not in st.session_state:
     st.session_state.db = cargar_o_inicializar_datos()
 
-# 2. SISTEMA MATEMÁTICO DE REGLAS (Tus reglas oficiales)
+# Asegurar que si el archivo existía pero se cambiaron nombres en la lista, las columnas coincidan
+for idx, nom in enumerate(NOMBRES_APOSTADORES, 1):
+    col1, col2 = f"Ap{idx}_G1", f"Ap{idx}_G2"
+    if col1 in st.session_state.db.columns:
+        st.session_state.db = st.session_state.db.rename(columns={col1: f"{nom}_G1", col2: f"{nom}_G2"})
+
+# 2. SISTEMA MATEMÁTICO DE REGLAS
 def calcular_puntos(r1, r2, p1, p2):
-    # Si falta el resultado real o el pronóstico, da 0 puntos
     if r1 == "" or r2 == "" or p1 == "" or p2 == "" or pd.isna(r1) or pd.isna(r2) or pd.isna(p1) or pd.isna(p2):
         return 0
     try:
@@ -57,77 +73,61 @@ def calcular_puntos(r1, r2, p1, p2):
     except:
         return 0
         
-    # Categoría 1: Marcador Exacto (10 puntos)
     if r1 == p1 and r2 == p2:
         return 10
-        
-    # Categoría 2: Acertar Ganador o Empate (5 puntos)
     ganador_real = 1 if r1 > r2 else (-1 if r1 < r2 else 0)
     ganador_pago = 1 if p1 > p2 else (-1 if p1 < p2 else 0)
     if ganador_real == ganador_pago:
         return 5
-        
-    # Categoría 3: Únicamente Diferencia de Goles (2 puntos)
     if (r1 - r2) == (p1 - p2):
         return 2
-        
     return 0
 
-# Pestañas de la interfaz de usuario
 pestana = st.radio("Selecciona la Vista:", ["📋 Control de Partidos", "📊 Tabla de Posiciones Global", "🏆 Evolución y Premiación"], horizontal=True)
 
 # --- HOJA 1: CONTROL DE PARTIDOS ---
 if pestana == "📋 Control de Partidos":
     st.subheader("Registro de Marcadores Reales y Pronósticos")
-    
     fase_sel = st.selectbox("Filtrar por Fase del Torneo", st.session_state.db["Fase"].unique())
     df_filtrado = st.session_state.db[st.session_state.db["Fase"] == fase_sel]
     
-    # Control de seguridad por contraseña
-    if password == "mundial2026": # CAMBIA ESTA CONTRASEÑA POR LA QUE TÚ QUIERAS
-        st.success("🔓 Modo Administrador Activado. Tienes permiso de edición.")
+    if password == "mundial2026":
+        st.success("🔓 Modo Administrator Activado.")
         df_editado = st.data_editor(df_filtrado, hide_index=True)
-        
         if st.button("💾 Guardar y Actualizar Polla Permanentemente"):
             st.session_state.db.update(df_editado)
-            # Guarda los cambios físicamente en el archivo de la nube
             st.session_state.db.to_csv(ARCHIVO_DATOS, index=False)
-            st.success("¡Datos guardados con éxito! Todos tus compañeros verán los cambios al actualizar.")
+            st.success("¡Datos guardados con éxito!")
             st.rerun()
     else:
-        st.info("🔒 Vista de Solo Lectura para Apostadores. Ingresa la contraseña en el panel izquierdo para editar.")
+        st.info("🔒 Vista de Solo Lectura para Apostadores.")
         st.dataframe(df_filtrado, hide_index=True)
 
 # --- HOJA 2: TABLA DE POSICIONES GLOBAL ---
 elif pestana == "📊 Tabla de Posiciones Global":
     st.subheader("Puntajes Acumulados")
-    
     puntajes = {}
-    for i in range(1, 12):
+    for nom in NOMBRES_APOSTADORES:
         total_puntos = 0
         for idx, fila in st.session_state.db.iterrows():
-            total_puntos += calcular_puntos(fila["Goles_Real_1"], fila["Goles_Real_2"], fila[f"Ap{i}_G1"], fila[f"Ap{i}_G2"])
-        puntajes[f"Apostador {i}"] = total_puntos
+            total_puntos += calcular_puntos(fila["Goles_Real_1"], fila["Goles_Real_2"], fila[f"{nom}_G1"], fila[f"{nom}_G2"])
+        puntajes[nom] = total_puntos
         
     df_posiciones = pd.DataFrame(list(puntajes.items()), columns=["Apostador", "Puntos Totales"])
     df_posiciones = df_posiciones.sort_values(by="Puntos Totales", ascending=False)
-    
     st.dataframe(df_posiciones, hide_index=True, use_container_width=True)
 
-# --- HOJA 3: EVOLUCIÓN Y PREMIACIÓN (RANKING DENSO) ---
+# --- HOJA 3: EVOLUCIÓN Y PREMIACIÓN ---
 elif pestana == "🏆 Evolución y Premiación":
-    st.subheader("Asignación de Puestos para Premios (Primer, Segundo y Tercer lugar)")
-    
+    st.subheader("Asignación de Puestos para Premios")
     puntajes = {}
-    for i in range(1, 12):
+    for nom in NOMBRES_APOSTADORES:
         total_puntos = 0
         for idx, fila in st.session_state.db.iterrows():
-            total_puntos += calcular_puntos(fila["Goles_Real_1"], fila["Goles_Real_2"], fila[f"Ap{i}_G1"], fila[f"Ap{i}_G2"])
-        puntajes[f"Apostador {i}"] = total_puntos
+            total_puntos += calcular_puntos(fila["Goles_Real_1"], fila["Goles_Real_2"], fila[f"{nom}_G1"], fila[f"{nom}_G2"])
+        puntajes[nom] = total_puntos
     
     df_premios = pd.DataFrame(list(puntajes.items()), columns=["Apostador", "Puntos"])
-    
-    # Implementación matemática del Ranking Denso para empates consecutivos
     df_premios["Puesto"] = df_premios["Puntos"].rank(method="dense", ascending=False).astype(int)
     df_premios = df_premios.sort_values(by="Puesto")
     
