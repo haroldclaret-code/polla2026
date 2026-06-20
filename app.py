@@ -18,119 +18,13 @@ NOMBRES_APOSTADORES = [
     "Álvaro", "Francisco", "Harold", "Alejandra", "Karina", "Milena"
 ]
 
-# 1. FUNCIÓN CON EL FIXTURE REAL COMPLETO Y CATEGORIZADO
-def cargar_o_inicializar_datos():
-    if os.path.exists(ARCHIVO_DATOS):
-        return pd.read_csv(ARCHIVO_DATOS)
-    
-    partidos_reales = [
-        # --- JORNADA 1 ---
-        {"ID": "P1", "Fase": "Fase de Grupos", "Detalle": "Jornada 1", "Partido": "Méx vs A2", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P2", "Fase": "Fase de Grupos", "Detalle": "Jornada 1", "Partido": "A3 vs A4", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P3", "Fase": "Fase de Grupos", "Detalle": "Jornada 1", "Partido": "Can vs B2", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P4", "Fase": "Fase de Grupos", "Detalle": "Jornada 1", "Partido": "B3 vs B4", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P5", "Fase": "Fase de Grupos", "Detalle": "Jornada 1", "Partido": "USA vs D2", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P6", "Fase": "Fase de Grupos", "Detalle": "Jornada 1", "Partido": "D3 vs D4", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P7", "Fase": "Fase de Grupos", "Detalle": "Jornada 1", "Partido": "C1 vs C2", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P8", "Fase": "Fase de Grupos", "Detalle": "Jornada 1", "Partido": "C3 vs C4", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P9", "Fase": "Fase de Grupos", "Detalle": "Jornada 1", "Partido": "E1 vs E2", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P10", "Fase": "Fase de Grupos", "Detalle": "Jornada 1", "Partido": "E3 vs E4", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P11", "Fase": "Fase de Grupos", "Detalle": "Jornada 1", "Partido": "F1 vs F2", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P12", "Fase": "Fase de Grupos", "Detalle": "Jornada 1", "Partido": "F3 vs F4", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P13", "Fase": "Fase de Grupos", "Detalle": "Jornada 1", "Partido": "G1 vs G2", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P14", "Fase": "Fase de Grupos", "Detalle": "Jornada 1", "Partido": "G3 vs G4", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P15", "Fase": "Fase de Grupos", "Detalle": "Jornada 1", "Partido": "H1 vs H2", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P16", "Fase": "Fase de Grupos", "Detalle": "Jornada 1", "Partido": "H3 vs H4", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P17", "Fase": "Fase de Grupos", "Detalle": "Jornada 1", "Partido": "I1 vs I2", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P18", "Fase": "Fase de Grupos", "Detalle": "Jornada 1", "Partido": "I3 vs I4", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P19", "Fase": "Fase de Grupos", "Detalle": "Jornada 1", "Partido": "J1 vs J2", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P20", "Fase": "Fase de Grupos", "Detalle": "Jornada 1", "Partido": "J3 vs J4", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P21", "Fase": "Fase de Grupos", "Detalle": "Jornada 1", "Partido": "K1 vs K2", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P22", "Fase": "Fase de Grupos", "Detalle": "Jornada 1", "Partido": "K3 vs K4", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P23", "Fase": "Fase de Grupos", "Detalle": "Jornada 1", "Partido": "L1 vs L2", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P24", "Fase": "Fase de Grupos", "Detalle": "Jornada 1", "Partido": "L3 vs L4", "Goles_Real_1": "", "Goles_Real_2": ""},
-
-        # --- JORNADA 2 ---
-        {"ID": "P25", "Fase": "Fase de Grupos", "Detalle": "Jornada 2", "Partido": "Méx vs A3", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P26", "Fase": "Fase de Grupos", "Detalle": "Jornada 2", "Partido": "A4 vs A2", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P27", "Fase": "Fase de Grupos", "Detalle": "Jornada 2", "Partido": "B4 vs B2", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P28", "Fase": "Fase de Grupos", "Detalle": "Jornada 2", "Partido": "Can vs B3", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P29", "Fase": "Fase de Grupos", "Detalle": "Jornada 2", "Partido": "USA vs D3", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P30", "Fase": "Fase de Grupos", "Detalle": "Jornada 2", "Partido": "D4 vs D2", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P31", "Fase": "Fase de Grupos", "Detalle": "Jornada 2", "Partido": "C4 vs C2", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P32", "Fase": "Fase de Grupos", "Detalle": "Jornada 2", "Partido": "C1 vs C3", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P33", "Fase": "Fase de Grupos", "Detalle": "Jornada 2", "Partido": "E4 vs E2", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P34", "Fase": "Fase de Grupos", "Detalle": "Jornada 2", "Partido": "E1 vs E3", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P35", "Fase": "Fase de Grupos", "Detalle": "Jornada 2", "Partido": "F4 vs F2", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P36", "Fase": "Fase de Grupos", "Detalle": "Jornada 2", "Partido": "F1 vs F3", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P37", "Fase": "Fase de Grupos", "Detalle": "Jornada 2", "Partido": "G4 vs G2", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P38", "Fase": "Fase de Grupos", "Detalle": "Jornada 2", "Partido": "G1 vs G3", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P39", "Fase": "Fase de Grupos", "Detalle": "Jornada 2", "Partido": "H4 vs H2", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P40", "Fase": "Fase de Grupos", "Detalle": "Jornada 2", "Partido": "H1 vs H3", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P41", "Fase": "Fase de Grupos", "Detalle": "Jornada 2", "Partido": "I4 vs I2", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P42", "Fase": "Fase de Grupos", "Detalle": "Jornada 2", "Partido": "I1 vs I3", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P43", "Fase": "Fase de Grupos", "Detalle": "Jornada 2", "Partido": "J4 vs J2", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P44", "Fase": "Fase de Grupos", "Detalle": "Jornada 2", "Partido": "J1 vs J3", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P45", "Fase": "Fase de Grupos", "Detalle": "Jornada 2", "Partido": "K4 vs K2", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P46", "Fase": "Fase de Grupos", "Detalle": "Jornada 2", "Partido": "K1 vs K3", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P47", "Fase": "Fase de Grupos", "Detalle": "Jornada 2", "Partido": "L4 vs L2", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P48", "Fase": "Fase de Grupos", "Detalle": "Jornada 2", "Partido": "L1 vs L3", "Goles_Real_1": "", "Goles_Real_2": ""},
-
-        # --- JORNADA 3 ---
-        {"ID": "P49", "Fase": "Fase de Grupos", "Detalle": "Jornada 3", "Partido": "A2 vs A3", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P50", "Fase": "Fase de Grupos", "Detalle": "Jornada 3", "Partido": "A4 vs Méx", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P51", "Fase": "Fase de Grupos", "Detalle": "Jornada 3", "Partido": "B2 vs B3", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P52", "Fase": "Fase de Grupos", "Detalle": "Jornada 3", "Partido": "B4 vs Can", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P53", "Fase": "Fase de Grupos", "Detalle": "Jornada 3", "Partido": "C2 vs C3", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P54", "Fase": "Fase de Grupos", "Detalle": "Jornada 3", "Partido": "C4 vs C1", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P55", "Fase": "Fase de Grupos", "Detalle": "Jornada 3", "Partido": "D2 vs D3", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P56", "Fase": "Fase de Grupos", "Detalle": "Jornada 3", "Partido": "D4 vs USA", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P57", "Fase": "Fase de Grupos", "Detalle": "Jornada 3", "Partido": "E2 vs E3", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P58", "Fase": "Fase de Grupos", "Detalle": "Jornada 3", "Partido": "E4 vs E1", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P59", "Fase": "Fase de Grupos", "Detalle": "Jornada 3", "Partido": "F2 vs F3", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P60", "Fase": "Fase de Grupos", "Detalle": "Jornada 3", "Partido": "F4 vs F1", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P61", "Fase": "Fase de Grupos", "Detalle": "Jornada 3", "Partido": "G2 vs G3", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P62", "Fase": "Fase de Grupos", "Detalle": "Jornada 3", "Partido": "G4 vs G1", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P63", "Fase": "Fase de Grupos", "Detalle": "Jornada 3", "Partido": "H2 vs H3", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P64", "Fase": "Fase de Grupos", "Detalle": "Jornada 3", "Partido": "H4 vs H1", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P65", "Fase": "Fase de Grupos", "Detalle": "Jornada 3", "Partido": "I2 vs I3", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P66", "Fase": "Fase de Grupos", "Detalle": "Jornada 3", "Partido": "I4 vs I1", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P67", "Fase": "Fase de Grupos", "Detalle": "Jornada 3", "Partido": "J2 vs J3", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P68", "Fase": "Fase de Grupos", "Detalle": "Jornada 3", "Partido": "J4 vs J1", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P69", "Fase": "Fase de Grupos", "Detalle": "Jornada 3", "Partido": "K2 vs K3", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P70", "Fase": "Fase de Grupos", "Detalle": "Jornada 3", "Partido": "K4 vs K1", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P71", "Fase": "Fase de Grupos", "Detalle": "Jornada 3", "Partido": "L2 vs L3", "Goles_Real_1": "", "Goles_Real_2": ""},
-        {"ID": "P72", "Fase": "Fase de Grupos", "Detalle": "Jornada 3", "Partido": "L4 vs L1", "Goles_Real_1": "", "Goles_Real_2": ""},
-    ]
-    
-    df_partidos = pd.DataFrame(partidos_reales)
-    
-    # --- LLAVES ELIMINATORIAS (CORREGIDAS VINCULANDO EL DETALLE) ---
-    llaves = []
-    for i in range(73, 89):
-        llaves.append({"ID": f"P{i}", "Fase": "Eliminatorias Directas", "Detalle": "Dieciseisavos de Final", "Partido": f"Llave {i-72}", "Goles_Real_1": "", "Goles_Real_2": ""})
-    for i in range(89, 97):
-        llaves.append({"ID": f"P{i}", "Fase": "Eliminatorias Directas", "Detalle": "Octavos de Final", "Partido": f"Octavos {i-88}", "Goles_Real_1": "", "Goles_Real_2": ""})
-    for i in range(97, 101):
-        llaves.append({"ID": f"P{i}", "Fase": "Eliminatorias Directas", "Detalle": "Cuartos de Final", "Partido": f"Cuartos {i-96}", "Goles_Real_1": "", "Goles_Real_2": ""})
-    llaves.append({"ID": "P101", "Fase": "Eliminatorias Directas", "Detalle": "Semifinal", "Partido": "Semifinal 1", "Goles_Real_1": "", "Goles_Real_2": ""})
-    llaves.append({"ID": "P102", "Fase": "Eliminatorias Directas", "Detalle": "Semifinal", "Partido": "Semifinal 2", "Goles_Real_1": "", "Goles_Real_2": ""})
-    llaves.append({"ID": "P103", "Fase": "Eliminatorias Directas", "Detalle": "Tercer Puesto", "Partido": "Partido 3º Puesto", "Goles_Real_1": "", "Goles_Real_2": ""})
-    llaves.append({"ID": "P104", "Fase": "Eliminatorias Directas", "Detalle": "Gran Final", "Partido": "Gran Final 🏆", "Goles_Real_1": "", "Goles_Real_2": ""})
-    
-    df_llaves = pd.DataFrame(llaves)
-    df_partidos = pd.concat([df_partidos, df_llaves], ignore_index=True)
-    
-    # Crear las columnas para tus 11 amigos
-    for nom in NOMBRES_APOSTADORES:
-        df_partidos[f"{nom}_G1"] = ""
-        df_partidos[f"{nom}_G2"] = ""
-        
-    df_partidos.to_csv(ARCHIVO_DATOS, index=False)
-    return df_partidos
-
+# 1. CARGA DIRECTA DE LA BASE DE DATOS FIJA DESDE GITHUB
 if "db" not in st.session_state:
-    st.session_state.db = cargar_o_inicializar_datos()
+    if os.path.exists(ARCHIVO_DATOS):
+        st.session_state.db = pd.read_csv(ARCHIVO_DATOS).fillna("")
+    else:
+        st.error(f"⚠️ No se encontró el archivo '{ARCHIVO_DATOS}' en GitHub. Por favor súbelo.")
+        st.stop()
 
 # 2. SISTEMA MATEMÁTICO DE REGLAS
 def calcular_puntos(r1, r2, p1, p2):
@@ -166,7 +60,7 @@ if pestana == "📋 Control de Partidos":
         
     df_filtrado = df_fase[df_fase["Detalle"] == detalle_sel]
     
-    # 📐 Altura adaptable para que se desplieguen completas sin recortes molesto
+    # Altura adaptable para evitar recortes visuales
     altura_dinamica = int((len(df_filtrado) + 1) * 35) + 45
 
     if password == "mundial2026":
@@ -175,7 +69,8 @@ if pestana == "📋 Control de Partidos":
         if st.button("💾 Guardar y Actualizar Polla Permanentemente"):
             st.session_state.db.update(df_editado)
             st.session_state.db.to_csv(ARCHIVO_DATOS, index=False)
-            st.success("¡Datos guardados con éxito!")
+            st.success("¡Datos guardados temporalmente en el servidor!")
+            st.info("💡 Consejo: Si agregas datos clave y quieres congelarlos para siempre, descarga el CSV desde el editor y súbelo a GitHub.")
             st.rerun()
     else:
         st.info("🔒 Vista de Solo Lectura para Apostadores.")
@@ -211,4 +106,4 @@ elif pestana == "🏆 Evolución y Premiación":
         if puesto == 3: return "🥉 3º Puesto"
         return f"{puesto}º Lugar"
     df_premios["Puesto"] = [asignar_medalla(i+1) for i in range(len(df_premios))]
-    st.table(df_premios)
+    st.table(df_premios)st.table(df_premios)
