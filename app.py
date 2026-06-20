@@ -18,12 +18,22 @@ NOMBRES_APOSTADORES = [
     "Álvaro", "Francisco", "Harold", "Alejandra", "Karina", "Milena"
 ]
 
-# 1. CARGA DIRECTA DE LA BASE DE DATOS FIJA DESDE GITHUB
+# 1. CARGA DIRECTA Y SEGURA DE LA BASE DE DATOS
 if "db" not in st.session_state:
     if os.path.exists(ARCHIVO_DATOS):
-        st.session_state.db = pd.read_csv(ARCHIVO_DATOS).fillna("")
+        try:
+            # Forzamos a leer todo como texto o manejar los vacíos limpiamente
+            df_cargado = pd.read_csv(ARCHIVO_DATOS)
+            df_cargado = df_cargado.fillna("")
+            # Asegurar que todas las celdas sean cadenas de texto para evitar errores de edición
+            for col in df_cargado.columns:
+                df_cargado[col] = df_cargado[col].astype(str).replace(r'^\s*$', '', regex=True)
+            st.session_state.db = df_cargado
+        except Exception as e:
+            st.error(f"💥 Error al procesar el archivo CSV: {e}")
+            st.stop()
     else:
-        st.error(f"⚠️ No se encontró el archivo '{ARCHIVO_DATOS}' en GitHub. Por favor súbelo.")
+        st.error(f"⚠️ No se encontró el archivo '{ARCHIVO_DATOS}' en la raíz de GitHub. Por favor verifica que el nombre sea exacto.")
         st.stop()
 
 # 2. SISTEMA MATEMÁTICO DE REGLAS
@@ -31,7 +41,7 @@ def calcular_puntos(r1, r2, p1, p2):
     if r1 == "" or r2 == "" or p1 == "" or p2 == "" or pd.isna(r1) or pd.isna(r2) or pd.isna(p1) or pd.isna(p2):
         return 0
     try:
-        r1, r2, p1, p2 = int(r1), int(r2), int(p1), int(p2)
+        r1, r2, p1, p2 = int(float(r1)), int(float(r2)), int(float(p1)), int(float(p2))
     except:
         return 0
     if r1 == p1 and r2 == p2:
@@ -44,6 +54,11 @@ def calcular_puntos(r1, r2, p1, p2):
         return 2
     return 0
 
+# Verificar que las columnas clave existan antes de renderizar
+if "Fase" not in st.session_state.db.columns or "Detalle" not in st.session_state.db.columns:
+    st.error("❌ El archivo CSV no contiene las columnas requeridas ('Fase' o 'Detalle').")
+    st.stop()
+
 pestana = st.radio("Selecciona la Vista Real:", ["📋 Control de Partidos", "📊 Tabla de Posiciones Global", "🏆 Evolución y Premiación"], horizontal=True)
 
 if pestana == "📋 Control de Partidos":
@@ -51,16 +66,17 @@ if pestana == "📋 Control de Partidos":
     
     col_f1, col_f2 = st.columns(2)
     with col_f1:
-        fase_sel = st.selectbox("1. Filtrar Gran Etapa:", st.session_state.db["Fase"].unique())
+        fases_disponibles = st.session_state.db["Fase"].unique()
+        fase_sel = st.selectbox("1. Filtrar Gran Etapa:", fases_disponibles)
     
     df_fase = st.session_state.db[st.session_state.db["Fase"] == fase_sel]
     
     with col_f2:
-        detalle_sel = st.selectbox("2. Seleccionar Ronda / Fecha:", df_fase["Detalle"].unique())
+        detalles_disponibles = df_fase["Detalle"].unique()
+        detalle_sel = st.selectbox("2. Seleccionar Ronda / Fecha:", detalles_disponibles)
         
     df_filtrado = df_fase[df_fase["Detalle"] == detalle_sel]
     
-    # Altura adaptable para evitar recortes visuales
     altura_dinamica = int((len(df_filtrado) + 1) * 35) + 45
 
     if password == "mundial2026":
@@ -69,8 +85,7 @@ if pestana == "📋 Control de Partidos":
         if st.button("💾 Guardar y Actualizar Polla Permanentemente"):
             st.session_state.db.update(df_editado)
             st.session_state.db.to_csv(ARCHIVO_DATOS, index=False)
-            st.success("¡Datos guardados temporalmente en el servidor!")
-            st.info("💡 Consejo: Si agregas datos clave y quieres congelarlos para siempre, descarga el CSV desde el editor y súbelo a GitHub.")
+            st.success("¡Datos guardados con éxito!")
             st.rerun()
     else:
         st.info("🔒 Vista de Solo Lectura para Apostadores.")
@@ -81,8 +96,9 @@ elif pestana == "📊 Tabla de Posiciones Global":
     puntajes = {}
     for nom in NOMBRES_APOSTADORES:
         total_puntos = 0
-        for idx, fila in st.session_state.db.iterrows():
-            total_puntos += calcular_puntos(fila["Goles_Real_1"], fila["Goles_Real_2"], fila[f"{nom}_G1"], fila[f"{nom}_G2"])
+        if f"{nom}_G1" in st.session_state.db.columns and f"{nom}_G2" in st.session_state.db.columns:
+            for idx, fila in st.session_state.db.iterrows():
+                total_puntos += calcular_puntos(fila["Goles_Real_1"], fila["Goles_Real_2"], fila[f"{nom}_G1"], fila[f"{nom}_G2"])
         puntajes[nom] = total_puntos
         
     df_posiciones = pd.DataFrame(list(puntajes.items()), columns=["Apostador", "Puntos Totales"])
@@ -94,8 +110,9 @@ elif pestana == "🏆 Evolución y Premiación":
     puntajes = {}
     for nom in NOMBRES_APOSTADORES:
         total_puntos = 0
-        for idx, fila in st.session_state.db.iterrows():
-            total_puntos += calcular_puntos(fila["Goles_Real_1"], fila["Goles_Real_2"], fila[f"{nom}_G1"], fila[f"{nom}_G2"])
+        if f"{nom}_G1" in st.session_state.db.columns and f"{nom}_G2" in st.session_state.db.columns:
+            for idx, fila in st.session_state.db.iterrows():
+                total_puntos += calcular_puntos(fila["Goles_Real_1"], fila["Goles_Real_2"], fila[f"{nom}_G1"], fila[f"{nom}_G2"])
         puntajes[nom] = total_puntos
     df_premios = pd.DataFrame(list(puntajes.items()), columns=["Apostador", "Puntos"])
     df_premios = df_premios.sort_values(by="Puntos", ascending=False)
@@ -106,4 +123,4 @@ elif pestana == "🏆 Evolución y Premiación":
         if puesto == 3: return "🥉 3º Puesto"
         return f"{puesto}º Lugar"
     df_premios["Puesto"] = [asignar_medalla(i+1) for i in range(len(df_premios))]
-    st.table(df_premios)st.table(df_premios)
+    st.table(df_premios)
