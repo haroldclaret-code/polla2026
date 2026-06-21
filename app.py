@@ -6,7 +6,7 @@ import os
 # Configuración inicial de la aplicación
 st.set_page_config(page_title="Polla Mundialista 2026", layout="wide", page_icon="⚽")
 
-st.title("⚽ Polla Mundialista 2026 - Sistema Profesional")
+st.title("⚽ Polla Mundialista 2026 - UNAD Chipaque")
 
 # 📝 LISTA OFICIAL DE TU GRUPO DE APOSTADORES
 NOMBRES_APOSTADORES = [
