@@ -4,8 +4,9 @@ import numpy as np
 import os
 
 # Configuración inicial de la aplicación
-st.set_page_config(page_title="Polla Mundialista 2026", layout="wide", page_icon="⚽")
+st.set_page_config(page_title="Polla Mundialista UNAD Chipaque", layout="wide", page_icon="⚽")
 
+# ¡Tu nuevo título personalizado!
 st.title("⚽ Polla Mundialista 2026 - UNAD Chipaque")
 
 # 📝 LISTA OFICIAL DE TU GRUPO DE APOSTADORES
@@ -16,12 +17,10 @@ NOMBRES_APOSTADORES = [
 
 ARCHIVO_DATOS = "datos_polla_2026.csv"
 
-# 🛠️ CONSTRUCCIÓN COMPLETA DEL FIXTURE OFICIAL EXTRAÍDO DE TUS IMÁGENES
+# 🛠️ CONSTRUCCIÓN DEL FIXTURE
 def generar_fixture_oficial_total():
     partidos = []
-    
     partidos_grupos_origen = [
-        # --- FECHA 1 ---
         {"Detalle": "11/06/2026", "Partido": "México vs Sudáfrica"},
         {"Detalle": "11/06/2026", "Partido": "Corea del Sur vs República Checa"},
         {"Detalle": "12/06/2026", "Partido": "Canadá vs Bosnia y Herzegovina"},
@@ -46,8 +45,6 @@ def generar_fixture_oficial_total():
         {"Detalle": "17/06/2026", "Partido": "Uzbekistán vs Colombia"},
         {"Detalle": "17/06/2026", "Partido": "Inglaterra vs Croacia"},
         {"Detalle": "17/06/2026", "Partido": "Ghana vs Panamá"},
-
-        # --- FECHA 2 ---
         {"Detalle": "18/06/2026", "Partido": "República Checa vs Sudáfrica"},
         {"Detalle": "18/06/2026", "Partido": "México vs Corea del Sur"},
         {"Detalle": "18/06/2026", "Partido": "Suiza vs Bosnia y Herzegovina"},
@@ -72,8 +69,6 @@ def generar_fixture_oficial_total():
         {"Detalle": "23/06/2026", "Partido": "Colombia vs Rep. Democ. del Congo"},
         {"Detalle": "23/06/2026", "Partido": "Inglaterra vs Ghana"},
         {"Detalle": "23/06/2026", "Partido": "Panamá vs Croacia"},
-
-        # --- FECHA 3 ---
         {"Detalle": "24/06/2026", "Partido": "República Checa vs México"},
         {"Detalle": "24/06/2026", "Partido": "Sudáfrica vs Corea del Sur"},
         {"Detalle": "24/06/2026", "Partido": "Suiza vs Canadá"},
@@ -117,7 +112,6 @@ def generar_fixture_oficial_total():
         })
         contador += 1
 
-    # Fases de Eliminación Directa
     for i in range(1, 17):
         partidos.append({"ID": f"16F_{i}", "Fase": "Dieciseisavos de Final", "Detalle": f"Llave {i}", "Partido": "Por Definir vs Por Definir", "Goles_Real_1": "", "Goles_Real_2": ""})
     for i in range(1, 9):
@@ -137,17 +131,15 @@ def generar_fixture_oficial_total():
             
     return pd.DataFrame(partidos)
 
-# 🔄 SISTEMA DE MEMORIA PERSISTENTE (ANTI-RESET)
+# 🔄 CONTROL DE PERSISTENCIA MEJORADO (Blindado contra cambios estéticos)
 if "db" not in st.session_state:
     if os.path.exists(ARCHIVO_DATOS):
         try:
+            # Forzamos la lectura directa del archivo guardado sin importar el código externo
             df_file = pd.read_csv(ARCHIVO_DATOS).fillna("")
-            if len(df_file) >= 104:
-                for col in df_file.columns:
-                    df_file[col] = df_file[col].astype(str).replace(r'^\s*$', '', regex=True)
-                st.session_state.db = df_file
-            else:
-                raise ValueError()
+            for col in df_file.columns:
+                df_file[col] = df_file[col].astype(str).replace(r'^\s*$', '', regex=True)
+            st.session_state.db = df_file
         except:
             df_nuevo = generar_fixture_oficial_total()
             df_nuevo.to_csv(ARCHIVO_DATOS, index=False)
@@ -216,7 +208,7 @@ if pestana == "📋 Gestión de Marcadores y Pronósticos":
     else:
         st.dataframe(df_reales_mostrar, hide_index=True, use_container_width=True)
 
-    # --- BLOQUE 2: PANEL DE PRONÓSTICOS INDIVIDUALES CORREGIDO ---
+    # --- BLOQUE 2: PANEL DE PRONÓSTICOS INDIVIDUALES ---
     st.markdown("---")
     st.markdown("### 👤 Pronósticos de los Apostadores")
     apostador_sel = st.selectbox("Selecciona un Participante para ver/editar su Polla:", NOMBRES_APOSTADORES)
@@ -224,35 +216,32 @@ if pestana == "📋 Gestión de Marcadores y Pronósticos":
     col_g1 = f"{apostador_sel}_G1"
     col_g2 = f"{apostador_sel}_G2"
     
-    # Creamos las columnas dinámicas fijas Goles Local y Goles Visitante independientes del texto de cabecera variable
     df_apostador_mostrar = df_jornada[["ID", "Detalle", "Partido"]].copy()
     df_apostador_mostrar["Goles Local"] = df_jornada[col_g1]
     df_apostador_mostrar["Goles Visitante"] = df_jornada[col_g2]
     
     if password == "mundial2026":
-        st.caption(f"✏️ Editando los pronósticos asignados a: **{apostador_sel}** (Guíate por el orden del Versus de la columna 'Partido')")
+        st.caption(f"✏️ Editando los pronósticos asignados a: **{apostador_sel}**")
         df_ap_editado = st.data_editor(df_apostador_mostrar, hide_index=True, use_container_width=True, key=f"editor_{apostador_sel}")
     else:
         st.dataframe(df_apostador_mostrar, hide_index=True, use_container_width=True)
 
-    # --- BOTÓN DE GUARDADO INTEGRADO ---
+    # --- BOTÓN DE GUARDADO ---
     if password == "mundial2026":
         st.markdown("### 💾 Guardar Cambios")
         if st.button("Sincronizar y Guardar Base de Datos"):
-            # 1. Actualizar resultados reales
             for _, fila in df_reales_editado.iterrows():
                 idx_original = st.session_state.db[st.session_state.db["ID"] == fila["ID"]].index[0]
                 st.session_state.db.at[idx_original, "Goles_Real_1"] = fila["Goles_Real_1"]
                 st.session_state.db.at[idx_original, "Goles_Real_2"] = fila["Goles_Real_2"]
             
-            # 2. Actualizar pronósticos del apostador actual
             for _, fila in df_ap_editado.iterrows():
                 idx_original = st.session_state.db[st.session_state.db["ID"] == fila["ID"]].index[0]
                 st.session_state.db.at[idx_original, col_g1] = fila["Goles Local"]
                 st.session_state.db.at[idx_original, col_g2] = fila["Goles Visitante"]
                 
             st.session_state.db.to_csv(ARCHIVO_DATOS, index=False)
-            st.success("🔒 ¡Datos guardados y actualizados con éxito!")
+            st.success("🔒 ¡Datos guardados con éxito!")
             st.rerun()
     else:
         st.info("🔒 Modo Lectura. Pon la contraseña de Administrador en el menú lateral para realizar cambios.")
