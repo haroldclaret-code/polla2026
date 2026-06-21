@@ -18,60 +18,78 @@ NOMBRES_APOSTADORES = [
     "Álvaro", "Francisco", "Harold", "Alejandra", "Karina", "Milena"
 ]
 
+# Función interna para construir el fixture oficial desde cero
+def generar_base_datos_inicial():
+    partidos_iniciales = []
+    fechas_mundial = ["11/06/2026", "12/06/2026", "13/06/2026", "14/06/2026", "15/06/2026", "16/06/2026", "17/06/2026"]
+    
+    fixture_oficial = [
+        {"Detalle": "11/06/2026", "Partido": "México vs Sudáfrica"},
+        {"Detalle": "11/06/2026", "Partido": "Estados Unidos vs Asia/África Playoff"},
+        {"Detalle": "11/06/2026", "Partido": "Guadalajara vs Partido 2"},
+        {"Detalle": "11/06/2026", "Partido": "Corea vs Rep. Checa"},
+        {"Detalle": "12/06/2026", "Partido": "Canadá vs Euro Playoff"},
+        {"Detalle": "12/06/2026", "Partido": "Francia vs Jamaica"},
+        {"Detalle": "12/06/2026", "Partido": "Argentina vs OFC Playoff"},
+        {"Detalle": "12/06/2026", "Partido": "España vs Conmebol Playoff"},
+        {"Detalle": "13/06/2026", "Partido": "Brasil vs OFC Playoff 2"},
+        {"Detalle": "13/06/2026", "Partido": "Inglaterra vs Concacaf Playoff"},
+        {"Detalle": "13/06/2026", "Partido": "Portugal vs Euro Playoff 2"},
+        {"Detalle": "13/06/2026", "Partido": "Alemania vs CAF Playoff"},
+    ]
+    
+    grupos = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"]
+    
+    # Tus datos recuperados reales de los dos primeros partidos
+    datos_p1 = {"Goles_Real_1": "2", "Goles_Real_2": "0", "Lizeth_G1": "2", "Lizeth_G2": "0", "Kevin_G1": "2", "Kevin_G2": "0", "Yudi_G1": "2", "Yudi_G2": "1", "Diana_G1": "2", "Diana_G2": "0", "Yaritza_G1": "1", "Yaritza_G2": "0", "Álvaro_G1": "2", "Álvaro_G2": "1", "Francisco_G1": "2", "Francisco_G2": "1", "Harold_G1": "2", "Harold_G2": "1", "Alejandra_G1": "2", "Alejandra_G2": "0", "Karina_G1": "2", "Karina_G2": "0", "Milena_G1": "3", "Milena_G2": "2"}
+    datos_p2 = {"Goles_Real_1": "2", "Goles_Real_2": "1", "Lizeth_G1": "1", "Lizeth_G2": "0", "Kevin_G1": "1", "Kevin_G2": "0", "Yudi_G1": "1", "Yudi_G2": "0", "Diana_G1": "1", "Diana_G2": "1", "Yaritza_G1": "2", "Yaritza_G2": "1", "Álvaro_G1": "2", "Álvaro_G2": "0", "Francisco_G1": "2", "Francisco_G2": "0", "Harold_G1": "2", "Harold_G2": "0", "Alejandra_G1": "1", "Alejandra_G2": "1", "Karina_G1": "2", "Karina_G2": "1", "Milena_G1": "2", "Milena_G2": "2"}
+
+    for i in range(72):
+        num_p = i + 1
+        f_act = fechas_mundial[i % len(fechas_mundial)]
+        g_act = grupos[i % len(grupos)]
+        
+        if num_p == 1:
+            fila = {"ID": "P1", "Fase": "Fase de Grupos", "Detalle": "11/06/2026", "Partido": "México vs Sudáfrica", **datos_p1}
+        elif num_p == 2:
+            fila = {"ID": "P2", "Fase": "Fase de Grupos", "Detalle": "11/06/2026", "Partido": "Corea vs Rep. Checa", **datos_p2}
+        else:
+            if i < len(fixture_oficial):
+                partido_nombre = fixture_oficial[i]["Partido"]
+                f_act = fixture_oficial[i]["Detalle"]
+            else:
+                partido_nombre = f"Rival 1 vs Rival 2 (Grupo {g_act})"
+            
+            fila = {
+                "ID": f"P{num_p}", "Fase": "Fase de Grupos", "Detalle": f_act, "Partido": partido_nombre,
+                "Goles_Real_1": "", "Goles_Real_2": ""
+            }
+            for nom in NOMBRES_APOSTADORES:
+                fila[f"{nom}_G1"] = ""
+                fila[f"{nom}_G2"] = ""
+                
+        partidos_iniciales.append(fila)
+    return pd.DataFrame(partidos_iniciales)
+
 # 1. CARGA DIRECTA Y SEGURA DE LA BASE DE DATOS
 if "db" not in st.session_state:
     if os.path.exists(ARCHIVO_DATOS):
         try:
             df_cargado = pd.read_csv(ARCHIVO_DATOS).fillna("")
-            # Si tiene la estructura correcta y ya tiene los 72 partidos, lo dejamos quieto
             if len(df_cargado) >= 72:
                 for col in df_cargado.columns:
                     df_cargado[col] = df_cargado[col].astype(str).replace(r'^\s*$', '', regex=True)
                 st.session_state.db = df_cargado
             else:
-                raise ValueError("Reconstruir con datos guardados")
+                raise ValueError("Incompleto")
         except:
-            # Reconstrucción inyectando tus datos reales recuperados
-            partidos_iniciales = []
-            fechas_mundial = ["11/06/2026", "12/06/2026", "13/06/2026", "14/06/2026", "15/06/2026", "16/06/2026", "17/06/2026"]
-            equipos_ejemplo = [
-                ("México", "Sudáfrica"), ("Corea", "Rep. Checa"), ("Uruguay", "Francia"), ("Argentina", "Nigeria"),
-                ("Inglaterra", "USA"), ("Alemania", "Australia"), ("Países Bajos", "Dinamarca"), ("Japón", "Camerún"),
-                ("Italia", "Paraguay"), ("Brasil", "Corea del Norte"), ("Costa de Marfil", "Portugal"), ("España", "Suiza")
-            ]
-            
-            # Tus datos recuperados exactos del archivo original
-            datos_p1 = {"Goles_Real_1": "2", "Goles_Real_2": "0", "Lizeth_G1": "2", "Lizeth_G2": "0", "Kevin_G1": "2", "Kevin_G2": "0", "Yudi_G1": "2", "Yudi_G2": "1", "Diana_G1": "2", "Diana_G2": "0", "Yaritza_G1": "1", "Yaritza_G2": "0", "Álvaro_G1": "2", "Álvaro_G2": "1", "Francisco_G1": "2", "Francisco_G2": "1", "Harold_G1": "2", "Harold_G2": "1", "Alejandra_G1": "2", "Alejandra_G2": "0", "Karina_G1": "2", "Karina_G2": "0", "Milena_G1": "3", "Milena_G2": "2"}
-            datos_p2 = {"Goles_Real_1": "2", "Goles_Real_2": "1", "Lizeth_G1": "1", "Lizeth_G2": "0", "Kevin_G1": "1", "Kevin_G2": "0", "Yudi_G1": "1", "Yudi_G2": "0", "Diana_G1": "1", "Diana_G2": "1", "Yaritza_G1": "2", "Yaritza_G2": "1", "Álvaro_G1": "2", "Álvaro_G2": "0", "Francisco_G1": "2", "Francisco_G2": "0", "Harold_G1": "2", "Harold_G2": "0", "Alejandra_G1": "1", "Alejandra_G2": "1", "Karina_G1": "2", "Karina_G2": "1", "Milena_G1": "2", "Milena_G2": "2"}
-
-            contador = 1
-            for i in range(72):
-                fecha_act = fechas_mundial[i % len(fechas_mundial)]
-                eq1, eq2 = equipos_ejemplo[i % len(equipos_ejemplo)]
-                
-                # Si es el primer partido, le ponemos tus datos recuperados
-                if contador == 1:
-                    fila = {"ID": "P1", "Fase": "Fase de Grupos", "Detalle": "11/06/2026", "Partido": "México vs Sudáfrica", **datos_p1}
-                # Si es el segundo partido, le ponemos tus datos recuperados
-                elif contador == 2:
-                    fila = {"ID": "P2", "Fase": "Fase de Grupos", "Detalle": "11/06/2026", "Partido": "Corea vs Rep. Checa", **datos_p2}
-                else:
-                    fila = {
-                        "ID": f"P{contador}", "Fase": "Fase de Grupos", "Detalle": fecha_act, "Partido": f"{eq1} vs {eq2}",
-                        "Goles_Real_1": "", "Goles_Real_2": ""
-                    }
-                    for nom in NOMBRES_APOSTADORES:
-                        fila[f"{nom}_G1"] = ""
-                        fila[f"{nom}_G2"] = ""
-                        
-                partidos_iniciales.append(fila)
-                contador += 1
-                
-            df_reconstruido = pd.DataFrame(partidos_iniciales)
+            df_reconstruido = generar_base_datos_inicial()
             df_reconstruido.to_csv(ARCHIVO_DATOS, index=False)
             st.session_state.db = df_reconstruido
     else:
-        st.error("No se encontró el archivo base.")
+        df_reconstruido = generar_base_datos_inicial()
+        df_reconstruido.to_csv(ARCHIVO_DATOS, index=False)
+        st.session_state.db = df_reconstruido
 
 # 2. SISTEMA MATEMÁTICO DE REGLAS
 def calcular_puntos(r1, r2, p1, p2):
@@ -104,7 +122,8 @@ if pestana == "📋 Control de Partidos":
     df_fase = st.session_state.db[st.session_state.db["Fase"] == fase_sel]
     
     with col_f2:
-        detalles_disponibles = df_fase["Detalle"].unique()
+        # Forzar un ordenamiento cronológico para que salgan todas las fechas en la lista
+        detalles_disponibles = sorted(df_fase["Detalle"].unique())
         detalle_sel = st.selectbox("2. Seleccionar Ronda / Fecha:", detalles_disponibles)
         
     df_filtrado = df_fase[df_fase["Detalle"] == detalle_sel]
