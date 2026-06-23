@@ -6,7 +6,6 @@ import os
 # Configuración inicial de la aplicación
 st.set_page_config(page_title="Polla Mundialista UNAD Chipaque", layout="wide", page_icon="⚽")
 
-# ¡Tu nuevo título personalizado!
 st.title("⚽ Polla Mundialista 2026 - UNAD Chipaque")
 
 # 📝 LISTA OFICIAL DE TU GRUPO DE APOSTADORES
@@ -131,36 +130,50 @@ def generar_fixture_oficial_total():
             
     return pd.DataFrame(partidos)
 
-# 🔄 CONTROL DE PERSISTENCIA MEJORADO (Blindado contra cambios estéticos)
+# Inicializar Base en Memoria Caché del Servidor
 if "db" not in st.session_state:
     if os.path.exists(ARCHIVO_DATOS):
         try:
-            # Forzamos la lectura directa del archivo guardado sin importar el código externo
             df_file = pd.read_csv(ARCHIVO_DATOS).fillna("")
             for col in df_file.columns:
                 df_file[col] = df_file[col].astype(str).replace(r'^\s*$', '', regex=True)
             st.session_state.db = df_file
         except:
-            df_nuevo = generar_fixture_oficial_total()
-            df_nuevo.to_csv(ARCHIVO_DATOS, index=False)
-            st.session_state.db = df_nuevo
+            st.session_state.db = generar_fixture_oficial_total()
     else:
-        df_nuevo = generar_fixture_oficial_total()
-        df_nuevo.to_csv(ARCHIVO_DATOS, index=False)
-        st.session_state.db = df_nuevo
+        st.session_state.db = generar_fixture_oficial_total()
 
 # ⚙️ BARRA LATERAL ADMINISTRATIVA
 st.sidebar.header("⚙️ Configuración")
 password = st.sidebar.text_input("Contraseña de Administrador", type="password")
 
-# Respaldo
+# Descargar Respaldo Directo
 csv_bytes = st.session_state.db.to_csv(index=False).encode('utf-8')
 st.sidebar.download_button(
-    label="Descargar Toda la Polla (CSV)",
+    label="⬇️ Descargar Copia (.CSV)",
     data=csv_bytes,
     file_name="RESPALDO_POLLA_MUNDIAL_2026.csv",
     mime="text/csv"
 )
+
+# 🚨 SISTEMA DE RESTAURACIÓN ANTIBORRADO (Caja de emergencia)
+if password == "mundial2026":
+    with st.sidebar.expander("🚨 Sistema de Restauración Completa"):
+        st.caption("Si la plataforma se reinicia, pega el texto de tu CSV descargado aquí para recuperar todo instantáneamente:")
+        texto_restaurar = st.text_area("Pegar Contenido CSV Aquí:")
+        if st.button("Restaurar Base de Datos"):
+            if texto_restaurar:
+                from io import StringIO
+                try:
+                    df_restaurado = pd.read_csv(StringIO(texto_restaurar)).fillna("")
+                    for col in df_restaurado.columns:
+                        df_restaurado[col] = df_restaurado[col].astype(str).replace(r'^\s*$', '', regex=True)
+                    st.session_state.db = df_restaurado
+                    st.session_state.db.to_csv(ARCHIVO_DATOS, index=False)
+                    st.success("¡Base de datos restaurada al 100%!")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Error al procesar: {e}")
 
 # 🧮 REGLAS DE PUNTOS
 def calcular_puntos(r1, r2, p1, p2):
@@ -241,7 +254,7 @@ if pestana == "📋 Gestión de Marcadores y Pronósticos":
                 st.session_state.db.at[idx_original, col_g2] = fila["Goles Visitante"]
                 
             st.session_state.db.to_csv(ARCHIVO_DATOS, index=False)
-            st.success("🔒 ¡Datos guardados con éxito!")
+            st.success("🔒 ¡Datos guardados con éxito en la sesión actual!")
             st.rerun()
     else:
         st.info("🔒 Modo Lectura. Pon la contraseña de Administrador en el menú lateral para realizar cambios.")
