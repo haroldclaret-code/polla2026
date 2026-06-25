@@ -130,14 +130,13 @@ def generar_fixture_oficial_total():
             
     return pd.DataFrame(partidos)
 
-# Inicializar Base en Memoria Caché del Servidor
+# Inicializar Base en Memoria con Encoding UTF-8-SIG para tildes
 if "db" not in st.session_state:
     if os.path.exists(ARCHIVO_DATOS):
         try:
-            df_file = pd.read_csv(ARCHIVO_DATOS).fillna("")
+            df_file = pd.read_csv(ARCHIVO_DATOS, encoding="utf-8-sig").fillna("")
             for col in df_file.columns:
                 df_file[col] = df_file[col].astype(str).replace(r'^\s*$', '', regex=True)
-                # Reemplazo estricto de .0 para mantener valores limpios
                 df_file[col] = df_file[col].str.replace(r'\.0$', '', regex=True)
             st.session_state.db = df_file
         except:
@@ -149,8 +148,8 @@ if "db" not in st.session_state:
 st.sidebar.header("⚙️ Configuración")
 password = st.sidebar.text_input("Contraseña de Administrador", type="password")
 
-# Descargar Respaldo Directo
-csv_bytes = st.session_state.db.to_csv(index=False).encode('utf-8')
+# Descargar Respaldo Forzando encoding con firmas Excel (utf-8-sig)
+csv_bytes = st.session_state.db.to_csv(index=False, encoding="utf-8-sig").encode('utf-8-sig')
 st.sidebar.download_button(
     label="⬇️ Descargar Copia (.CSV)",
     data=csv_bytes,
@@ -158,7 +157,7 @@ st.sidebar.download_button(
     mime="text/csv"
 )
 
-# 🚨 SISTEMA DE RESTAURACIÓN ANTIBORRADO (Caja de emergencia)
+# 🚨 SISTEMA DE RESTAURACIÓN ANTIBORRADO
 if password == "mundial2026":
     with st.sidebar.expander("🚨 Sistema de Restauración Completa"):
         st.caption("Si la plataforma se reinicia, pega el texto de tu CSV descargado aquí para recuperar todo instantáneamente:")
@@ -172,7 +171,7 @@ if password == "mundial2026":
                         df_restaurado[col] = df_restaurado[col].astype(str).replace(r'^\s*$', '', regex=True)
                         df_restaurado[col] = df_restaurado[col].str.replace(r'\.0$', '', regex=True)
                     st.session_state.db = df_restaurado
-                    st.session_state.db.to_csv(ARCHIVO_DATOS, index=False)
+                    st.session_state.db.to_csv(ARCHIVO_DATOS, index=False, encoding="utf-8-sig")
                     st.success("¡Base de datos restaurada al 100%!")
                     st.rerun()
                 except Exception as e:
@@ -230,65 +229,4 @@ if pestana == "📋 Gestión de Marcadores y Pronósticos":
     apostador_sel = st.selectbox("Selecciona un Participante para ver/editar su Polla:", NOMBRES_APOSTADORES)
     
     col_g1 = f"{apostador_sel}_G1"
-    col_g2 = f"{apostador_sel}_G2"
-    
-    df_apostador_mostrar = df_jornada[["ID", "Detalle", "Partido"]].copy()
-    df_apostador_mostrar["Goles Local"] = df_jornada[col_g1]
-    df_apostador_mostrar["Goles Visitante"] = df_jornada[col_g2]
-    
-    if password == "mundial2026":
-        st.caption(f"✏️ Editando los pronósticos asignados a: **{apostador_sel}**")
-        df_ap_editado = st.data_editor(df_apostador_mostrar, hide_index=True, use_container_width=True, key=f"editor_{apostador_sel}")
-    else:
-        st.dataframe(df_apostador_mostrar, hide_index=True, use_container_width=True)
-
-    # --- BOTÓN DE GUARDADO ---
-    if password == "mundial2026":
-        st.markdown("### 💾 Guardar Cambios")
-        if st.button("Sincronizar y Guardar Base de Datos"):
-            for _, fila in df_reales_editado.iterrows():
-                idx_original = st.session_state.db[st.session_state.db["ID"] == fila["ID"]].index[0]
-                # Limpieza de decimales al guardar de forma explícita
-                st.session_state.db.at[idx_original, "Goles_Real_1"] = str(fila["Goles_Real_1"]).replace(".0", "") if fila["Goles_Real_1"] != "" else ""
-                st.session_state.db.at[idx_original, "Goles_Real_2"] = str(fila["Goles_Real_2"]).replace(".0", "") if fila["Goles_Real_2"] != "" else ""
-            
-            for _, fila in df_ap_editado.iterrows():
-                idx_original = st.session_state.db[st.session_state.db["ID"] == fila["ID"]].index[0]
-                st.session_state.db.at[idx_original, col_g1] = str(fila["Goles Local"]).replace(".0", "") if fila["Goles Local"] != "" else ""
-                st.session_state.db.at[idx_original, col_g2] = str(fila["Goles Visitante"]).replace(".0", "") if fila["Goles Visitante"] != "" else ""
-                
-            st.session_state.db.to_csv(ARCHIVO_DATOS, index=False)
-            st.success("🔒 ¡Datos guardados con éxito en la sesión actual!")
-            st.rerun()
-    else:
-        st.info("🔒 Modo Lectura. Pon la contraseña de Administrador en el menú lateral para realizar cambios.")
-
-elif pestana == "📊 Tabla General de Posiciones":
-    st.subheader("Clasificación de Miembros del Grupo")
-    puntajes = {}
-    for nom in NOMBRES_APOSTADORES:
-        total = 0
-        for idx, fila in st.session_state.db.iterrows():
-            total += calcular_puntos(fila["Goles_Real_1"], fila["Goles_Real_2"], fila[f"{nom}_G1"], fila[f"{nom}_G2"])
-        puntajes[nom] = total
-        
-    df_pos = pd.DataFrame(list(puntajes.items()), columns=["Apostador", "Puntos Totales"]).sort_values(by="Puntos Totales", ascending=False)
-    st.dataframe(df_pos, hide_index=True, use_container_width=True)
-
-elif pestana == "🏆 Cuadro de Honor":
-    st.subheader("Asignación de Premios")
-    puntajes = {}
-    for nom in NOMBRES_APOSTADORES:
-        total = 0
-        for idx, fila in st.session_state.db.iterrows():
-            total += calcular_puntos(fila["Goles_Real_1"], fila["Goles_Real_2"], fila[f"{nom}_G1"], fila[f"{nom}_G2"])
-        puntajes[nom] = total
-    df_premios = pd.DataFrame(list(puntajes.items()), columns=["Apostador", "Puntos"]).sort_values(by="Puntos", ascending=False)
-    
-    def medalla(p):
-        if p == 1: return "🥇 Primer Puesto"
-        if p == 2: return "🥈 Segundo Puesto"
-        if p == 3: return "🥉 Tercer Puesto"
-        return f"{p}º Lugar"
-    df_premios["Puesto"] = [medalla(i+1) for i in range(len(df_premios))]
-    st.table(df_premios[["Puesto", "Apostador", "Puntos"]])
+    col_g2 = f"{
