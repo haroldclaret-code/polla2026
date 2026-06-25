@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import io
+import os
 
 # Configuración inicial de la aplicación
 st.set_page_config(page_title="Polla Mundialista UNAD Chipaque", layout="wide", page_icon="⚽")
@@ -11,6 +12,8 @@ NOMBRES_APOSTADORES = [
     "Lizeth", "Kevin", "Yudi", "Diana", "Yaritza", 
     "Álvaro", "Francisco", "Harold", "Alejandra", "Karina", "Milena"
 ]
+
+ARCHIVO_DATOS = "datos_polla_2026.csv"
 
 # 🛠️ FUNCIÓN PARA GENERAR EL FIXTURE DESDE CERO
 def generar_fixture_inicial():
@@ -117,158 +120,4 @@ def generar_fixture_inicial():
         partidos.append({"ID": f"SF_{i}", "Fase": "Semifinal", "Detalle": f"Semifinal {i}", "Partido": "Por Definir vs Por Definir", "Goles_Real_1": "", "Goles_Real_2": ""})
         
     partidos.append({"ID": "F_3ER", "Fase": "Tercer Puesto", "Detalle": "Final de Consolación", "Partido": "Perdedor SF1 vs Perdedor SF2", "Goles_Real_1": "", "Goles_Real_2": ""})
-    partidos.append({"ID": "F_GRAN", "Fase": "Gran Final", "Detalle": "Definición del Título", "Partido": "Ganador SF1 vs Ganador SF2", "Goles_Real_1": "", "Goles_Real_2": ""})
-
-    for fila in partidos:
-        for nom in NOMBRES_APOSTADORES:
-            fila[f"{nom}_G1"] = ""
-            fila[f"{nom}_G2"] = ""
-            
-    return pd.DataFrame(partidos)
-
-# 🔄 CONTROL DE PERSISTENCIA AUTOMÁTICO EN LA NUBE (Streamlit Secrets)
-if "db" not in st.session_state:
-    if "datos_polla" in st.secrets:
-        try:
-            csv_data = st.secrets["datos_polla"]
-            df_file = pd.read_csv(io.StringIO(csv_data)).fillna("")
-            for col in df_file.columns:
-                df_file[col] = df_file[col].astype(str).replace(r'^\s*$', '', regex=True)
-            st.session_state.db = df_file
-        except:
-            st.session_state.db = generar_fixture_inicial()
-    else:
-        st.session_state.db = generar_fixture_inicial()
-
-# ⚙️ BARRA LATERAL ADMINISTRATIVA
-st.sidebar.header("⚙️ Configuración")
-password = st.sidebar.text_input("Contraseña de Administrador", type="password")
-
-# Descargar Respaldo Directo
-csv_bytes = st.session_state.db.to_csv(index=False).encode('utf-8')
-st.sidebar.download_button(
-    label="⬇️ Descargar Copia (.CSV)",
-    data=csv_bytes,
-    file_name="RESPALDO_POLLA_MUNDIAL_2026.csv",
-    mime="text/csv"
-)
-
-# Instrucción para persistencia permanente
-if password == "mundial2026":
-    with st.sidebar.expander("💾 Guardado Permanente Avanzado"):
-        st.info("Para que los cambios se queden guardados para siempre (incluso si la app se apaga), copia el texto de abajo, ve a los 'Secrets' en tu panel de Streamlit Cloud y pégalo reemplazando el valor anterior.")
-        texto_para_secrets = st.session_state.db.to_csv(index=False)
-        st.text_area("Copia todo este contenido para tus Secrets:", value=texto_para_secrets, height=200)
-
-# 🧮 REGLAS DE PUNTOS
-def calcular_puntos(r1, r2, p1, p2):
-    if r1 == "" or r2 == "" or p1 == "" or p2 == "" or pd.isna(r1) or pd.isna(r2) or pd.isna(p1) or pd.isna(p2):
-        return 0
-    try:
-        r1, r2, p1, p2 = int(float(r1)), int(float(r2)), int(float(p1)), int(float(p2))
-    except:
-        return 0
-    if r1 == p1 and r2 == p2:
-        return 10
-    gr = 1 if r1 > r2 else (-1 if r1 < r2 else 0)
-    gp = 1 if p1 > p2 else (-1 if p1 < p2 else 0)
-    if gr == gp:
-        return 5
-    if (r1 - r2) == (p1 - p2):
-        return 2
-    return 0
-
-# PESTAÑAS PRINCIPALES
-pestana = st.radio("Secciones de la Polla:", ["📋 Gestión de Marcadores y Pronósticos", "📊 Tabla General de Posiciones", "🏆 Cuadro de Honor"], horizontal=True)
-
-if pestana == "📋 Gestión de Marcadores y Pronósticos":
-    st.subheader("Control del Calendario Oficial")
-    fases = ["Fase de Grupos", "Dieciseisavos de Final", "Octavos de Final", "Cuartos de Final", "Semifinal", "Tercer Puesto", "Gran Final"]
-    fase_sel = st.selectbox("Seleccionar Instancia Actual:", fases)
-    
-    df_filtrado = st.session_state.db[st.session_state.db["Fase"] == fase_sel]
-    
-    if fase_sel == "Fase de Grupos":
-        fechas_internas = sorted(df_filtrado["Detalle"].unique())
-        fecha_sel = st.selectbox("Filtrar por Día/Jornada:", fechas_internas)
-        df_jornada = df_filtrado[df_filtrado["Detalle"] == fecha_sel]
-    else:
-        df_jornada = df_filtrado
-
-    # --- BLOQUE 1: RESULTADOS REALES ---
-    st.markdown("### 🏆 Resultados Reales del Mundial")
-    cols_visibles_reales = ["ID", "Detalle", "Partido", "Goles_Real_1", "Goles_Real_2"]
-    df_reales_mostrar = df_jornada[cols_visibles_reales]
-    
-    if password == "mundial2026":
-        st.caption("✏️ Edita los marcadores oficiales abajo y presiona guardar.")
-        df_reales_editado = st.data_editor(df_reales_mostrar, hide_index=True, use_container_width=True, key="editor_reales")
-    else:
-        st.dataframe(df_reales_mostrar, hide_index=True, use_container_width=True)
-
-    # --- BLOQUE 2: PANEL DE PRONÓSTICOS INDIVIDUALES ---
-    st.markdown("---")
-    st.markdown("### 👤 Pronósticos de los Apostadores")
-    apostador_sel = st.selectbox("Selecciona un Participante para ver/editar su Polla:", NOMBRES_APOSTADORES)
-    
-    col_g1 = f"{apostador_sel}_G1"
-    col_g2 = f"{apostador_sel}_G2"
-    
-    df_apostador_mostrar = df_jornada[["ID", "Detalle", "Partido"]].copy()
-    df_apostador_mostrar["Goles Local"] = df_jornada[col_g1]
-    df_apostador_mostrar["Goles Visitante"] = df_jornada[col_g2]
-    
-    if password == "mundial2026":
-        st.caption(f"✏️ Editando los pronósticos asignados a: **{apostador_sel}**")
-        df_ap_editado = st.data_editor(df_apostador_mostrar, hide_index=True, use_container_width=True, key=f"editor_{apostador_sel}")
-    else:
-        st.dataframe(df_apostador_mostrar, hide_index=True, use_container_width=True)
-
-    # --- BOTÓN DE GUARDADO ---
-    if password == "mundial2026":
-        st.markdown("### 💾 Guardar Cambios")
-        if st.button("Sincronizar Cambios en Memoria"):
-            for _, fila in df_reales_editado.iterrows():
-                idx_original = st.session_state.db[st.session_state.db["ID"] == fila["ID"]].index[0]
-                st.session_state.db.at[idx_original, "Goles_Real_1"] = fila["Goles_Real_1"]
-                st.session_state.db.at[idx_original, "Goles_Real_2"] = fila["Goles_Real_2"]
-            
-            for _, fila in df_ap_editado.iterrows():
-                idx_original = st.session_state.db[st.session_state.db["ID"] == fila["ID"]].index[0]
-                st.session_state.db.at[idx_original, col_g1] = fila["Goles Local"]
-                st.session_state.db.at[idx_original, col_g2] = fila["Goles Visitante"]
-                
-            st.success("🔒 Guardado temporal exitoso. Recuerda revisar el menú 'Guardado Permanente Avanzado' a la izquierda si deseas fijarlo para siempre.")
-            st.rerun()
-    else:
-        st.info("🔒 Modo Lectura. Pon la contraseña de Administrador en el menú lateral para realizar cambios.")
-
-elif pestana == "📊 Tabla General de Posiciones":
-    st.subheader("Clasificación de Miembros del Grupo")
-    puntajes = {}
-    for nom in NOMBRES_APOSTADORES:
-        total = 0
-        for idx, fila in st.session_state.db.iterrows():
-            total += calcular_puntos(fila["Goles_Real_1"], fila["Goles_Real_2"], fila[f"{nom}_G1"], fila[f"{nom}_G2"])
-        puntajes[nom] = total
-        
-    df_pos = pd.DataFrame(list(puntajes.items()), columns=["Apostador", "Puntos Totales"]).sort_values(by="Puntos Totales", ascending=False)
-    st.dataframe(df_pos, hide_index=True, use_container_width=True)
-
-elif pestana == "🏆 Cuadro de Honor":
-    st.subheader("Asignación de Premios")
-    puntajes = {}
-    for nom in NOMBRES_APOSTADORES:
-        total = 0
-        for idx, fila in st.session_state.db.iterrows():
-            total += calcular_puntos(fila["Goles_Real_1"], fila["Goles_Real_2"], fila[f"{nom}_G1"], fila[f"{nom}_G2"])
-        puntajes[nom] = total
-    df_premios = pd.DataFrame(list(puntajes.items()), columns=["Apostador", "Puntos"]).sort_values(by="Puntos", ascending=False)
-    
-    def medalla(p):
-        if p == 1: return "🥇 Primer Puesto"
-        if p == 2: return "🥈 Segundo Puesto"
-        if p == 3: return "🥉 Tercer Puesto"
-        return f"{p}º Lugar"
-    df_premios["Puesto"] = [medalla(i+1) for i in range(len(df_premios))]
-    st.table(df_premios[["Puesto", "Apostador", "Puntos"]])
+    partidos.append({"ID": "F_GRAN", "Fase": "Gran Final", "Detalle": "Definición del Título", "Partido": "Ganador SF1
