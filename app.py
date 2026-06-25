@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import os
+from io import StringIO
 
 # Configuración inicial de la aplicación
 st.set_page_config(page_title="Polla Mundialista UNAD Chipaque", layout="wide", page_icon="⚽")
@@ -15,6 +16,23 @@ NOMBRES_APOSTADORES = [
 ]
 
 ARCHIVO_DATOS = "datos_polla_2026.csv"
+
+# Función interna para limpiar textos rotos por fallas previas de codificación (Encoding)
+def sanitizar_caracteres_rotos(df):
+    mapa_reemplazos = {
+        "MÃ©xico": "México", "MÃ©x": "Méx", "SudÃ¡frica": "Sudáfrica", "RepÃºblica": "República",
+        "RepÃºblica Checa": "República Checa", "RepÃºb": "Repúb", "PaÃ-ses": "Países", 
+        "PaÃ­ses": "Países", "JapÃ³n": "Japón", "Suecia vs TÃºnez": "Suecia vs Túnez",
+        "TÃºnez": "Túnez", "BÃ©lgica": "Bélgica", "IrÃ¡n": "Irán", "EspaÃ±a": "España",
+        "PanamÃ¡": "Panamá", "Cabo Verde vs Arabia Saudita": "Cabo Verde vs Arabia Saudita",
+        "Rep. Democ. del Congo": "Rep. Democ. del Congo", "UzbekistÃ¡n": "Uzbekistán",
+        "Argelia vs Austria": "Argelia vs Austria", "CanadÃ¡": "Canadá"
+    }
+    for col in df.columns:
+        if df[col].dtype == object:
+            for roto, limpio in mapa_reemplazos.items():
+                df[col] = df[col].astype(str).str.replace(roto, limpio, regex=False)
+    return df
 
 # 🛠️ CONSTRUCCIÓN DEL FIXTURE
 def generar_fixture_oficial_total():
@@ -130,11 +148,13 @@ def generar_fixture_oficial_total():
             
     return pd.DataFrame(partidos)
 
-# Inicializar Base en Memoria con Encoding UTF-8-SIG para tildes
+# Inicializar Base en Memoria y sanitizar tildes rotas automáticamente
 if "db" not in st.session_state:
     if os.path.exists(ARCHIVO_DATOS):
         try:
-            df_file = pd.read_csv(ARCHIVO_DATOS, encoding="utf-8-sig").fillna("")
+            # Detecta si se guardó con coma o punto y coma de forma flexible
+            df_file = pd.read_csv(ARCHIVO_DATOS, sep=None, engine='python', encoding="utf-8-sig").fillna("")
+            df_file = sanitizar_caracteres_rotos(df_file)
             for col in df_file.columns:
                 df_file[col] = df_file[col].astype(str).replace(r'^\s*$', '', regex=True)
                 df_file[col] = df_file[col].str.replace(r'\.0$', '', regex=True)
@@ -144,14 +164,17 @@ if "db" not in st.session_state:
     else:
         st.session_state.db = generar_fixture_oficial_total()
 
+# Garantizar sanitización continua en cada refresco
+st.session_state.db = sanitizar_caracteres_rotos(st.session_state.db)
+
 # ⚙️ BARRA LATERAL ADMINISTRATIVA
 st.sidebar.header("⚙️ Configuración")
 password = st.sidebar.text_input("Contraseña de Administrador", type="password")
 
-# Descargar Respaldo Forzando encoding con firmas Excel (utf-8-sig)
-csv_bytes = st.session_state.db.to_csv(index=False, encoding="utf-8-sig").encode('utf-8-sig')
+# Descargar Respaldo optimizado en punto y coma para Excel de Latinoamérica
+csv_bytes = st.session_state.db.to_csv(index=False, sep=";", encoding="utf-8-sig").encode('utf-8-sig')
 st.sidebar.download_button(
-    label="⬇️ Descargar Copia (.CSV)",
+    label="⬇️ Descargar Copia (.CSV para Excel)",
     data=csv_bytes,
     file_name="RESPALDO_POLLA_MUNDIAL_2026.csv",
     mime="text/csv"
@@ -160,19 +183,19 @@ st.sidebar.download_button(
 # 🚨 SISTEMA DE RESTAURACIÓN ANTIBORRADO
 if password == "mundial2026":
     with st.sidebar.expander("🚨 Sistema de Restauración Completa"):
-        st.caption("Si la plataforma se reinicia, pega el texto de tu CSV descargado aquí para recuperar todo instantáneamente:")
+        st.caption("Si la plataforma se reinicia, pega el texto de tu CSV descargado aquí:")
         texto_restaurar = st.text_area("Pegar Contenido CSV Aquí:")
         if st.button("Restaurar Base de Datos"):
             if texto_restaurar:
-                from io import StringIO
                 try:
-                    df_restaurado = pd.read_csv(StringIO(texto_restaurar)).fillna("")
+                    df_restaurado = pd.read_csv(StringIO(texto_restaurar), sep=None, engine='python').fillna("")
+                    df_restaurado = sanitizar_caracteres_rotos(df_restaurado)
                     for col in df_restaurado.columns:
                         df_restaurado[col] = df_restaurado[col].astype(str).replace(r'^\s*$', '', regex=True)
                         df_restaurado[col] = df_restaurado[col].str.replace(r'\.0$', '', regex=True)
                     st.session_state.db = df_restaurado
-                    st.session_state.db.to_csv(ARCHIVO_DATOS, index=False, encoding="utf-8-sig")
-                    st.success("¡Base de datos restaurada al 100%!")
+                    st.session_state.db.to_csv(ARCHIVO_DATOS, index=False, sep=";", encoding="utf-8-sig")
+                    st.success("¡Base de datos restaurada y tildes corregidas al 100%!")
                     st.rerun()
                 except Exception as e:
                     st.error(f"Error al procesar: {e}")
@@ -229,4 +252,31 @@ if pestana == "📋 Gestión de Marcadores y Pronósticos":
     apostador_sel = st.selectbox("Selecciona un Participante para ver/editar su Polla:", NOMBRES_APOSTADORES)
     
     col_g1 = f"{apostador_sel}_G1"
-    col_g2 = f"{
+    col_g2 = f"{apostador_sel}_G2"
+    
+    df_apostador_mostrar = df_jornada[["ID", "Detalle", "Partido"]].copy()
+    df_apostador_mostrar["Goles Local"] = df_jornada[col_g1]
+    df_apostador_mostrar["Goles Visitante"] = df_jornada[col_g2]
+    
+    if password == "mundial2026":
+        st.caption(f"✏️ Editando los pronósticos asignados a: **{apostador_sel}**")
+        df_ap_editado = st.data_editor(df_apostador_mostrar, hide_index=True, use_container_width=True, key=f"editor_{apostador_sel}")
+    else:
+        st.dataframe(df_apostador_mostrar, hide_index=True, use_container_width=True)
+
+    # --- BOTÓN DE GUARDADO ---
+    if password == "mundial2026":
+        st.markdown("### 💾 Guardar Cambios")
+        if st.button("Sincronizar y Guardar Base de Datos"):
+            for _, fila in df_reales_editado.iterrows():
+                idx_original = st.session_state.db[st.session_state.db["ID"] == fila["ID"]].index[0]
+                st.session_state.db.at[idx_original, "Goles_Real_1"] = str(fila["Goles_Real_1"]).replace(".0", "") if fila["Goles_Real_1"] != "" else ""
+                st.session_state.db.at[idx_original, "Goles_Real_2"] = str(fila["Goles_Real_2"]).replace(".0", "") if fila["Goles_Real_2"] != "" else ""
+            
+            for _, fila in df_ap_editado.iterrows():
+                idx_original = st.session_state.db[st.session_state.db["ID"] == fila["ID"]].index[0]
+                st.session_state.db.at[idx_original, col_g1] = str(fila["Goles Local"]).replace(".0", "") if fila["Goles Local"] != "" else ""
+                st.session_state.db.at[idx_original, col_g2] = str(fila["Goles Visitante"]).replace(".0", "") if fila["Goles Visitante"] != "" else ""
+                
+            st.session_state.db.to_csv(ARCHIVO_DATOS, index=False, sep=";", encoding="utf-8-sig")
+            st.success
