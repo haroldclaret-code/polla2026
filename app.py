@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import os
+from io import StringIO
 
 # Configuración inicial de la aplicación
 st.set_page_config(page_title="Polla Mundialista UNAD Chipaque", layout="wide", page_icon="⚽")
@@ -130,13 +131,14 @@ def generar_fixture_oficial_total():
             
     return pd.DataFrame(partidos)
 
-# Inicializar Base en Memoria Caché del Servidor
+# Inicializar Base de Datos en Cache
 if "db" not in st.session_state:
     if os.path.exists(ARCHIVO_DATOS):
         try:
-            df_file = pd.read_csv(ARCHIVO_DATOS).fillna("")
+            df_file = pd.read_csv(ARCHIVO_DATOS, sep=None, engine='python', encoding="utf-8-sig").fillna("")
             for col in df_file.columns:
                 df_file[col] = df_file[col].astype(str).replace(r'^\s*$', '', regex=True)
+                df_file[col] = df_file[col].str.replace(r'\.0$', '', regex=True)
             st.session_state.db = df_file
         except:
             st.session_state.db = generar_fixture_oficial_total()
@@ -147,8 +149,7 @@ if "db" not in st.session_state:
 st.sidebar.header("⚙️ Configuración")
 password = st.sidebar.text_input("Contraseña de Administrador", type="password")
 
-# Descargar Respaldo Directo
-csv_bytes = st.session_state.db.to_csv(index=False).encode('utf-8')
+csv_bytes = st.session_state.db.to_csv(index=False, sep=";", encoding="utf-8-sig").encode('utf-8-sig')
 st.sidebar.download_button(
     label="⬇️ Descargar Copia (.CSV)",
     data=csv_bytes,
@@ -156,21 +157,20 @@ st.sidebar.download_button(
     mime="text/csv"
 )
 
-# 🚨 SISTEMA DE RESTAURACIÓN ANTIBORRADO (Caja de emergencia)
 if password == "mundial2026":
     with st.sidebar.expander("🚨 Sistema de Restauración Completa"):
-        st.caption("Si la plataforma se reinicia, pega el texto de tu CSV descargado aquí para recuperar todo instantáneamente:")
+        st.caption("Pega el contenido de tu archivo CSV aquí para restaurar datos:")
         texto_restaurar = st.text_area("Pegar Contenido CSV Aquí:")
         if st.button("Restaurar Base de Datos"):
             if texto_restaurar:
-                from io import StringIO
                 try:
-                    df_restaurado = pd.read_csv(StringIO(texto_restaurar)).fillna("")
+                    df_restaurado = pd.read_csv(StringIO(texto_restaurar), sep=None, engine='python').fillna("")
                     for col in df_restaurado.columns:
                         df_restaurado[col] = df_restaurado[col].astype(str).replace(r'^\s*$', '', regex=True)
+                        df_restaurado[col] = df_restaurado[col].str.replace(r'\.0$', '', regex=True)
                     st.session_state.db = df_restaurado
-                    st.session_state.db.to_csv(ARCHIVO_DATOS, index=False)
-                    st.success("¡Base de datos restaurada al 100%!")
+                    st.session_state.db.to_csv(ARCHIVO_DATOS, index=False, sep=";", encoding="utf-8-sig")
+                    st.success("¡Base de datos restaurada!")
                     st.rerun()
                 except Exception as e:
                     st.error(f"Error al procesar: {e}")
@@ -245,30 +245,36 @@ if pestana == "📋 Gestión de Marcadores y Pronósticos":
         if st.button("Sincronizar y Guardar Base de Datos"):
             for _, fila in df_reales_editado.iterrows():
                 idx_original = st.session_state.db[st.session_state.db["ID"] == fila["ID"]].index[0]
-                st.session_state.db.at[idx_original, "Goles_Real_1"] = fila["Goles_Real_1"]
-                st.session_state.db.at[idx_original, "Goles_Real_2"] = fila["Goles_Real_2"]
+                st.session_state.db.at[idx_original, "Goles_Real_1"] = str(fila["Goles_Real_1"]).replace(".0", "") if fila["Goles_Real_1"] != "" else ""
+                st.session_state.db.at[idx_original, "Goles_Real_2"] = str(fila["Goles_Real_2"]).replace(".0", "") if fila["Goles_Real_2"] != "" else ""
             
             for _, fila in df_ap_editado.iterrows():
                 idx_original = st.session_state.db[st.session_state.db["ID"] == fila["ID"]].index[0]
-                st.session_state.db.at[idx_original, col_g1] = fila["Goles Local"]
-                st.session_state.db.at[idx_original, col_g2] = fila["Goles Visitante"]
+                st.session_state.db.at[idx_original, col_g1] = str(fila["Goles Local"]).replace(".0", "") if fila["Goles Local"] != "" else ""
+                st.session_state.db.at[idx_original, col_g2] = str(fila["Goles Visitante"]).replace(".0", "") if fila["Goles Visitante"] != "" else ""
                 
-            st.session_state.db.to_csv(ARCHIVO_DATOS, index=False)
-            st.success("🔒 ¡Datos guardados con éxito en la sesión actual!")
+            st.session_state.db.to_csv(ARCHIVO_DATOS, index=False, sep=";", encoding="utf-8-sig")
+            st.success("🔒 ¡Datos guardados con éxito!")
             st.rerun()
     else:
-        st.info("🔒 Modo Lectura. Pon la contraseña de Administrador en el menú lateral para realizar cambios.")
+        st.info("🔒 Modo Lectura. Ponga la contraseña en el menú lateral para realizar cambios.")
 
 elif pestana == "📊 Tabla General de Posiciones":
     st.subheader("Clasificación de Miembros del Grupo")
     puntajes = {}
     for nom in NOMBRES_APOSTADORES:
         total = 0
+        exactos = 0
         for idx, fila in st.session_state.db.iterrows():
-            total += calcular_puntos(fila["Goles_Real_1"], fila["Goles_Real_2"], fila[f"{nom}_G1"], fila[f"{nom}_G2"])
-        puntajes[nom] = total
+            pts = calcular_puntos(fila["Goles_Real_1"], fila["Goles_Real_2"], fila[f"{nom}_G1"], fila[f"{nom}_G2"])
+            total += pts
+            if pts == 10:
+                exactos += 1
+        puntajes[nom] = {"Puntos Totales": total, "Marcadores Exactos": exactos}
         
-    df_pos = pd.DataFrame(list(puntajes.items()), columns=["Apostador", "Puntos Totales"]).sort_values(by="Puntos Totales", ascending=False)
+    df_pos = pd.DataFrame.from_dict(puntajes, orient='index').reset_index()
+    df_pos.columns = ["Apostador", "Puntos Totales", "Marcadores Exactos"]
+    df_pos = df_pos.sort_values(by=["Puntos Totales", "Marcadores Exactos"], ascending=[False, False])
     st.dataframe(df_pos, hide_index=True, use_container_width=True)
 
 elif pestana == "🏆 Cuadro de Honor":
@@ -276,15 +282,29 @@ elif pestana == "🏆 Cuadro de Honor":
     puntajes = {}
     for nom in NOMBRES_APOSTADORES:
         total = 0
+        exactos = 0
         for idx, fila in st.session_state.db.iterrows():
-            total += calcular_puntos(fila["Goles_Real_1"], fila["Goles_Real_2"], fila[f"{nom}_G1"], fila[f"{nom}_G2"])
-        puntajes[nom] = total
-    df_premios = pd.DataFrame(list(puntajes.items()), columns=["Apostador", "Puntos"]).sort_values(by="Puntos", ascending=False)
+            pts = calcular_puntos(fila["Goles_Real_1"], fila["Goles_Real_2"], fila[f"{nom}_G1"], fila[f"{nom}_G2"])
+            total += pts
+            if pts == 10:
+                exactos += 1
+        puntajes[nom] = {"Puntos": total, "Exactos": exactos}
+        
+    df_premios = pd.DataFrame.from_dict(puntajes, orient='index').reset_index()
+    df_premios.columns = ["Apostador", "Puntos", "Exactos"]
+    df_premios = df_premios.sort_values(by=["Puntos", "Exactos"], ascending=[False, False]).reset_index(drop=True)
+    
+    # Cálculo preciso de ranking matemático oficial (maneja empates saltando puestos automáticamente)
+    df_premios["Num_Puesto"] = df_premios[["Puntos", "Exactos"]].apply(tuple, axis=1).rank(method='min', ascending=False).astype(int)
     
     def medalla(p):
         if p == 1: return "🥇 Primer Puesto"
         if p == 2: return "🥈 Segundo Puesto"
         if p == 3: return "🥉 Tercer Puesto"
         return f"{p}º Lugar"
-    df_premios["Puesto"] = [medalla(i+1) for i in range(len(df_premios))]
-    st.table(df_premios[["Puesto", "Apostador", "Puntos"]])
+        
+    df_premios["Puesto"] = df_premios["Num_Puesto"].apply(medalla)
+    
+    # Se reordenan las columnas y se oculta la columna numérica de índice para evitar duplicados visuales
+    df_mostrar_premios = df_premios[["Puesto", "Apostador", "Puntos", "Exactos"]]
+    st.dataframe(df_mostrar_premios, hide_index=True, use_container_width=True)
