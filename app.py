@@ -1,11 +1,9 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-import os
+import io
 
 # Configuración inicial de la aplicación
 st.set_page_config(page_title="Polla Mundialista UNAD Chipaque", layout="wide", page_icon="⚽")
-
 st.title("⚽ Polla Mundialista 2026 - UNAD Chipaque")
 
 # 📝 LISTA OFICIAL DE TU GRUPO DE APOSTADORES
@@ -14,10 +12,8 @@ NOMBRES_APOSTADORES = [
     "Álvaro", "Francisco", "Harold", "Alejandra", "Karina", "Milena"
 ]
 
-ARCHIVO_DATOS = "datos_polla_2026.csv"
-
-# 🛠️ CONSTRUCCIÓN DEL FIXTURE
-def generar_fixture_oficial_total():
+# 🛠️ FUNCIÓN PARA GENERAR EL FIXTURE DESDE CERO
+def generar_fixture_inicial():
     partidos = []
     partidos_grupos_origen = [
         {"Detalle": "11/06/2026", "Partido": "México vs Sudáfrica"},
@@ -130,18 +126,19 @@ def generar_fixture_oficial_total():
             
     return pd.DataFrame(partidos)
 
-# Inicializar Base en Memoria Caché del Servidor
+# 🔄 CONTROL DE PERSISTENCIA AUTOMÁTICO EN LA NUBE (Streamlit Secrets)
 if "db" not in st.session_state:
-    if os.path.exists(ARCHIVO_DATOS):
+    if "datos_polla" in st.secrets:
         try:
-            df_file = pd.read_csv(ARCHIVO_DATOS).fillna("")
+            csv_data = st.secrets["datos_polla"]
+            df_file = pd.read_csv(io.StringIO(csv_data)).fillna("")
             for col in df_file.columns:
                 df_file[col] = df_file[col].astype(str).replace(r'^\s*$', '', regex=True)
             st.session_state.db = df_file
         except:
-            st.session_state.db = generar_fixture_oficial_total()
+            st.session_state.db = generar_fixture_inicial()
     else:
-        st.session_state.db = generar_fixture_oficial_total()
+        st.session_state.db = generar_fixture_inicial()
 
 # ⚙️ BARRA LATERAL ADMINISTRATIVA
 st.sidebar.header("⚙️ Configuración")
@@ -156,24 +153,12 @@ st.sidebar.download_button(
     mime="text/csv"
 )
 
-# 🚨 SISTEMA DE RESTAURACIÓN ANTIBORRADO (Caja de emergencia)
+# Instrucción para persistencia permanente
 if password == "mundial2026":
-    with st.sidebar.expander("🚨 Sistema de Restauración Completa"):
-        st.caption("Si la plataforma se reinicia, pega el texto de tu CSV descargado aquí para recuperar todo instantáneamente:")
-        texto_restaurar = st.text_area("Pegar Contenido CSV Aquí:")
-        if st.button("Restaurar Base de Datos"):
-            if texto_restaurar:
-                from io import StringIO
-                try:
-                    df_restaurado = pd.read_csv(StringIO(texto_restaurar)).fillna("")
-                    for col in df_restaurado.columns:
-                        df_restaurado[col] = df_restaurado[col].astype(str).replace(r'^\s*$', '', regex=True)
-                    st.session_state.db = df_restaurado
-                    st.session_state.db.to_csv(ARCHIVO_DATOS, index=False)
-                    st.success("¡Base de datos restaurada al 100%!")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Error al procesar: {e}")
+    with st.sidebar.expander("💾 Guardado Permanente Avanzado"):
+        st.info("Para que los cambios se queden guardados para siempre (incluso si la app se apaga), copia el texto de abajo, ve a los 'Secrets' en tu panel de Streamlit Cloud y pégalo reemplazando el valor anterior.")
+        texto_para_secrets = st.session_state.db.to_csv(index=False)
+        st.text_area("Copia todo este contenido para tus Secrets:", value=texto_para_secrets, height=200)
 
 # 🧮 REGLAS DE PUNTOS
 def calcular_puntos(r1, r2, p1, p2):
@@ -242,7 +227,7 @@ if pestana == "📋 Gestión de Marcadores y Pronósticos":
     # --- BOTÓN DE GUARDADO ---
     if password == "mundial2026":
         st.markdown("### 💾 Guardar Cambios")
-        if st.button("Sincronizar y Guardar Base de Datos"):
+        if st.button("Sincronizar Cambios en Memoria"):
             for _, fila in df_reales_editado.iterrows():
                 idx_original = st.session_state.db[st.session_state.db["ID"] == fila["ID"]].index[0]
                 st.session_state.db.at[idx_original, "Goles_Real_1"] = fila["Goles_Real_1"]
@@ -253,8 +238,7 @@ if pestana == "📋 Gestión de Marcadores y Pronósticos":
                 st.session_state.db.at[idx_original, col_g1] = fila["Goles Local"]
                 st.session_state.db.at[idx_original, col_g2] = fila["Goles Visitante"]
                 
-            st.session_state.db.to_csv(ARCHIVO_DATOS, index=False)
-            st.success("🔒 ¡Datos guardados con éxito en la sesión actual!")
+            st.success("🔒 Guardado temporal exitoso. Recuerda revisar el menú 'Guardado Permanente Avanzado' a la izquierda si deseas fijarlo para siempre.")
             st.rerun()
     else:
         st.info("🔒 Modo Lectura. Pon la contraseña de Administrador en el menú lateral para realizar cambios.")
