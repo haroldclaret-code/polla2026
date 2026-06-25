@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import io
-import os
 
 # Configuración inicial de la aplicación
 st.set_page_config(page_title="Polla Mundialista UNAD Chipaque", layout="wide", page_icon="⚽")
@@ -12,8 +11,6 @@ NOMBRES_APOSTADORES = [
     "Lizeth", "Kevin", "Yudi", "Diana", "Yaritza", 
     "Álvaro", "Francisco", "Harold", "Alejandra", "Karina", "Milena"
 ]
-
-ARCHIVO_DATOS = "datos_polla_2026.csv"
 
 # 🛠️ FUNCIÓN PARA GENERAR EL FIXTURE DESDE CERO
 def generar_fixture_inicial():
@@ -120,4 +117,50 @@ def generar_fixture_inicial():
         partidos.append({"ID": f"SF_{i}", "Fase": "Semifinal", "Detalle": f"Semifinal {i}", "Partido": "Por Definir vs Por Definir", "Goles_Real_1": "", "Goles_Real_2": ""})
         
     partidos.append({"ID": "F_3ER", "Fase": "Tercer Puesto", "Detalle": "Final de Consolación", "Partido": "Perdedor SF1 vs Perdedor SF2", "Goles_Real_1": "", "Goles_Real_2": ""})
-    partidos.append({"ID": "F_GRAN", "Fase": "Gran Final", "Detalle": "Definición del Título", "Partido": "Ganador SF1
+    partidos.append({"ID": "F_GRAN", "Fase": "Gran Final", "Detalle": "Definición del Título", "Partido": "Ganador SF1 vs Ganador SF2", "Goles_Real_1": "", "Goles_Real_2": ""})
+
+    for fila in partidos:
+        for nom in NOMBRES_APOSTADORES:
+            fila[f"{nom}_G1"] = ""
+            fila[f"{nom}_G2"] = ""
+            
+    return pd.DataFrame(partidos)
+
+# 🔄 CONTROL DE PERSISTENCIA EN CACHÉ DE SESIÓN
+if "db" not in st.session_state:
+    st.session_state.db = generar_fixture_inicial()
+
+# ⚙️ BARRA LATERAL ADMINISTRATIVA
+st.sidebar.header("⚙️ Configuración")
+password = st.sidebar.text_input("Contraseña de Administrador", type="password")
+
+# Descargar Respaldo Directo
+csv_bytes = st.session_state.db.to_csv(index=False).encode('utf-8')
+st.sidebar.download_button(
+    label="⬇️ Descargar Copia (.CSV)",
+    data=csv_bytes,
+    file_name="RESPALDO_POLLA_MUNDIAL_2026.csv",
+    mime="text/csv"
+)
+
+# 🚨 SISTEMA DE SUBIDA DIRECTA DE ARCHIVO (Recovery mejorado)
+if password == "mundial2026":
+    with st.sidebar.expander("🚨 Cargar / Restaurar Archivo de Datos"):
+        st.caption("Selecciona el archivo '.csv' guardado en tu PC para restaurar los marcadores:")
+        archivo_cargado = st.file_uploader("Subir archivo de respaldo", type=["csv"])
+        if archivo_cargado is not None:
+            try:
+                df_restaurado = pd.read_csv(archivo_cargado).fillna("")
+                for col in df_restaurado.columns:
+                    df_restaurado[col] = df_restaurado[col].astype(str).replace(r'^\s*$', '', regex=True)
+                st.session_state.db = df_restaurado
+                st.success("¡Base de datos restaurada con éxito desde el archivo!")
+            except Exception as e:
+                st.error(f"Error al leer el archivo: {e}")
+
+# 🧮 REGLAS DE PUNTOS
+def calcular_puntos(r1, r2, p1, p2):
+    if r1 == "" or r2 == "" or p1 == "" or p2 == "" or pd.isna(r1) or pd.isna(r2) or pd.isna(p1) or pd.isna(p2):
+        return 0
+    try:
+        r1, r2, p1, p2 = int(float(r
